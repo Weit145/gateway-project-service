@@ -1,0 +1,34 @@
+basePath: /
+definitions:
+  dto.Response:
+    properties:
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: HTTP gateway for startup services.
+  title: Gateway Startup API
+  version: "1.0"
+paths:
+  /_health:
+    get:
+      description: Checks gateway and auth service availability.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      summary: Check health
+      tags:
+      - health
+swagger: "2.0"
