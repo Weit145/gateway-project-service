@@ -3,7 +3,7 @@ module github.com/Weit145/gateway-startup
 go 1.25.5
 
 require (
-	github.com/Weit145/proto-startup v0.0.0-20260508105320-be90b17c9acc
+	github.com/Weit145/proto-startup v0.1.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/swaggo/http-swagger v1.3.4

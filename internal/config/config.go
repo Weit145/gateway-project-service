@@ -12,7 +12,7 @@ type Config struct {
 }
 
 type Log struct {
-	Level string `env:"LOG_LEVEL" envDefault:"INFO"`
+	Level string `env:"LOG_LEVEL" envDefault:"DEBUG"`
 }
 
 type HTTP struct {
@@ -38,7 +38,7 @@ func envOrDefault(env string, def string) string {
 func InitConfig() Config {
 	cfg := Config{
 		Log: Log{
-			Level: envOrDefault("LOG_LEVEL", "INFO"),
+			Level: envOrDefault("LOG_LEVEL", "DEBUG"),
 		},
 		HTTP: HTTP{
 			Address: envOrDefault("HTTP_ADDRESS", "0.0.0.0:8080"),

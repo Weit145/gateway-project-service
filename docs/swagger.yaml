@@ -1,10 +1,40 @@
 basePath: /
 definitions:
+  dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        maxLength: 100
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.RegisterResponse:
+    properties:
+      access_token:
+        type: string
+      user:
+        $ref: '#/definitions/dto.User'
+    type: object
   dto.Response:
     properties:
       error:
         type: string
       status:
+        type: string
+    type: object
+  dto.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      role:
         type: string
     type: object
 host: localhost:8080
@@ -31,4 +61,47 @@ paths:
       summary: Check health
       tags:
       - health
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new user and returns an access token. Refresh token
+        is set in an HttpOnly cookie.
+      parameters:
+      - description: Register request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          headers:
+            Set-Cookie:
+              description: refresh_token cookie
+              type: string
+          schema:
+            $ref: '#/definitions/dto.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      summary: Register user
+      tags:
+      - auth
 swagger: "2.0"

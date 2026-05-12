@@ -5,8 +5,9 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/Weit145/gateway-startup/internal/logger"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
-	mapererr_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
+	mapper_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
 	"github.com/Weit145/gateway-startup/internal/usecase"
 )
 
@@ -21,14 +22,15 @@ import (
 func Health(ser usecase.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		err := ser.CheckHealth(r.Context())
+		ctx := r.Context()
+		err := ser.CheckHealth(ctx)
 		if err != nil {
-			slog.Error("failed to check health", "error", err)
+			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to check health", "error", err)
 
-			mapererr_err.MapErr(w, r, err)
+			mapper_err.MapErr(w, r, err)
 			return
 		}
-		slog.Debug("successful _health")
+		slog.DebugContext(ctx, "successful _health")
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)

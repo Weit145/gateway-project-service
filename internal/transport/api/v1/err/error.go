@@ -1,4 +1,4 @@
-package mapererr_err
+package mapper_err
 
 import (
 	"encoding/json"

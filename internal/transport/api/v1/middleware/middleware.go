@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/Weit145/gateway-startup/internal/logger"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
 )
 
@@ -21,5 +22,13 @@ func Recovery(next http.Handler) http.Handler {
 		}()
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+func Logging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ip := r.RemoteAddr
+		ctx := logger.WithLogIp(r.Context(), ip)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

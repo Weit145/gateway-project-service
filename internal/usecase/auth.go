@@ -5,18 +5,38 @@ import (
 	"fmt"
 
 	errs "github.com/Weit145/gateway-startup/internal/lib/e"
+	"github.com/Weit145/gateway-startup/internal/logger"
+	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
 )
 
 type AuthService interface {
+	CheckHealth(ctx context.Context) error
+	Register(ctx context.Context, email string, password string) (error, dto.RegisterResponse, string)
 }
 
 func (s *Service) CheckHealth(ctx context.Context) error {
-	result, err := s.grpcClient.CheckHealth(ctx)
+	err, health := s.grpcClient.CheckHealth(ctx)
 	if err != nil {
-		return fmt.Errorf("%w", errs.ErrInternal)
+		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal))
 	}
-	if result.GetHealth() != true {
-		return fmt.Errorf("%w", errs.ErrInternal)
+	if !health {
+		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal))
 	}
 	return nil
+}
+
+func (s *Service) Register(ctx context.Context, email string, password string) (error, dto.RegisterResponse, string) {
+	err, accessToken, refreshToken, user := s.grpcClient.Register(ctx, email, password)
+	if err != nil {
+		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), dto.RegisterResponse{}, ""
+	}
+	return nil, dto.RegisterResponse{
+		AccessToken: accessToken,
+		User: dto.User{
+			Id:    user.ID(),
+			Email: user.Email(),
+			Name:  user.Username(),
+			Role:  user.Role(),
+		},
+	}, refreshToken
 }

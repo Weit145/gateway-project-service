@@ -14,8 +14,12 @@ func NewRouter(ser usecase.Services) *mux.Router {
 
 	r := mux.NewRouter()
 	r.Use(middleware.Recovery)
-
+	r.Use(middleware.Logging)
 	r.HandleFunc("/_health", handler.Health(ser)).Methods(http.MethodGet)
+
+	auth := r.PathPrefix("/auth").Subrouter()
+	auth.HandleFunc("/register", handler.Register(ser)).Methods(http.MethodPost)
+
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	return r

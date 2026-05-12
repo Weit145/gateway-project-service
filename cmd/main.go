@@ -38,6 +38,7 @@ func main() {
 	//Init grpc client
 	grpcClient, err := grpc.New(cfg.GRPC.AuthAddr)
 	if err != nil {
+		slog.ErrorContext(logger.ErrorCtx(ctx, err), "init grpc client", "error", err)
 		return
 	}
 	slog.Info("Init grpc")
@@ -65,13 +66,13 @@ func main() {
 		defer cancel()
 
 		if err := server.Shutdown(shutdownCtx); err != nil {
-			slog.Error("shutdown http server", "error", err)
+			slog.ErrorContext(logger.ErrorCtx(shutdownCtx, err), "shutdown http server", "error", err)
 		}
 	}()
 	slog.Info("http server started", "addr", cfg.HTTP.Address)
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		slog.Error("listen and serve", "error", err)
+		slog.ErrorContext(logger.ErrorCtx(ctx, err), "listen and serve", "error", err)
 		os.Exit(1)
 	}
 }
