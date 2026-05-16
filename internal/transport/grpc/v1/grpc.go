@@ -9,9 +9,10 @@ import (
 	"github.com/Weit145/gateway-startup/internal/domain/auth"
 	errs "github.com/Weit145/gateway-startup/internal/lib/e"
 	"github.com/Weit145/gateway-startup/internal/logger"
+	mapper_err_grpc "github.com/Weit145/gateway-startup/internal/transport/grpc/v1/err"
+	"github.com/google/uuid"
 
 	GRPCauth "github.com/Weit145/proto-startup/auth"
-	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
@@ -24,7 +25,7 @@ type Client struct {
 
 type GRPServices interface {
 	CheckHealth(ctx context.Context) (err error, health bool)
-	Register(ctx context.Context, email string, password string) (err error, accessToken string, refreshToken string, user auth.User)
+	Register(ctx context.Context, email string, password string, name string) (err error, accessToken string, refreshToken string, user auth.User)
 }
 
 func New(addr string) (*Client, error) {
@@ -88,10 +89,11 @@ func (c *Client) CheckHealth(ctx context.Context) (err error, health bool) {
 	return nil, health
 }
 
-func (c *Client) Register(ctx context.Context, email string, password string) (err error, accessToken string, refreshToken string, user auth.User) {
+func (c *Client) Register(ctx context.Context, email string, password string, name string) (err error, accessToken string, refreshToken string, user auth.User) {
 	resp, err := c.api.Register(ctx, &GRPCauth.RegisterRequest{
 		Email:    email,
 		Password: password,
+		Name:     name,
 	})
 	if err != nil {
 		slog.DebugContext(ctx, "Failed to register via gRPC", "error", err)
@@ -99,39 +101,28 @@ func (c *Client) Register(ctx context.Context, email string, password string) (e
 	}
 
 	accessToken = resp.GetAccessToken()
-	if accessToken == "" {
-		slog.DebugContext(ctx, "Received empty access token from gRPC response")
-		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), "", "", auth.User{}
-	}
 	refreshToken = resp.GetRefreshToken()
-	if refreshToken == "" {
-		slog.DebugContext(ctx, "Received empty refresh token from gRPC response")
-		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), "", "", auth.User{}
+	idString := resp.GetUser().GetId()
+	email = resp.GetUser().GetEmail()
+	role := resp.GetUser().GetRole()
+	username := resp.GetUser().GetUsername()
+
+	err = mapper_err_grpc.InvalidErr(ctx,
+		mapper_err_grpc.Field{Name: "accessToken", Value: accessToken},
+		mapper_err_grpc.Field{Name: "refreshToken", Value: refreshToken},
+		mapper_err_grpc.Field{Name: "id", Value: idString},
+		mapper_err_grpc.Field{Name: "email", Value: email},
+		mapper_err_grpc.Field{Name: "username", Value: username},
+		mapper_err_grpc.Field{Name: "role", Value: role},
+	)
+
+	if err != nil {
+		return logger.WrapError(ctx, err), "", "", auth.User{}
 	}
 
-	idString := resp.GetUser().GetId()
-	if idString == "" {
-		slog.DebugContext(ctx, "Received empty user ID from gRPC response")
-		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), "", "", auth.User{}
-	}
 	id, err := uuid.Parse(idString)
 	if err != nil {
 		slog.DebugContext(ctx, "Received invalid user ID from gRPC response", "error", err)
-		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), "", "", auth.User{}
-	}
-	email = resp.GetUser().GetEmail()
-	if email == "" {
-		slog.DebugContext(ctx, "Received empty user email from gRPC response")
-		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), "", "", auth.User{}
-	}
-	role := resp.GetUser().GetRole()
-	if role == "" {
-		slog.DebugContext(ctx, "Received empty user role from gRPC response")
-		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), "", "", auth.User{}
-	}
-	username := resp.GetUser().GetUsername()
-	if username == "" {
-		slog.DebugContext(ctx, "Received empty user username from gRPC response")
 		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), "", "", auth.User{}
 	}
 

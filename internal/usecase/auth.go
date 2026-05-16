@@ -11,7 +11,7 @@ import (
 
 type AuthService interface {
 	CheckHealth(ctx context.Context) error
-	Register(ctx context.Context, email string, password string) (error, dto.RegisterResponse, string)
+	Register(ctx context.Context, email string, password string, name string) (error, dto.RegisterResponse, string)
 }
 
 func (s *Service) CheckHealth(ctx context.Context) error {
@@ -25,8 +25,8 @@ func (s *Service) CheckHealth(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) Register(ctx context.Context, email string, password string) (error, dto.RegisterResponse, string) {
-	err, accessToken, refreshToken, user := s.grpcClient.Register(ctx, email, password)
+func (s *Service) Register(ctx context.Context, email string, password string, name string) (error, dto.RegisterResponse, string) {
+	err, accessToken, refreshToken, user := s.grpcClient.Register(ctx, email, password, name)
 	if err != nil {
 		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), dto.RegisterResponse{}, ""
 	}

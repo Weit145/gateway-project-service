@@ -40,7 +40,7 @@ func Register(ser usecase.Services) http.HandlerFunc {
 			return
 		}
 
-		err, resp, refreshToken := ser.Register(ctx, req.Email, req.Password)
+		err, resp, refreshToken := ser.Register(ctx, req.Email, req.Password, req.Name)
 		if err != nil {
 			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to register user", "error", err)
 
