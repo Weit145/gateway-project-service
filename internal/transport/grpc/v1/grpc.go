@@ -12,7 +12,7 @@ import (
 	mapper_err_grpc "github.com/Weit145/gateway-startup/internal/transport/grpc/v1/err"
 	"github.com/google/uuid"
 
-	GRPCauth "github.com/Weit145/proto-startup/auth"
+	GRPCauth "github.com/weit145/proto-startup/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
@@ -26,6 +26,7 @@ type Client struct {
 type GRPServices interface {
 	CheckHealth(ctx context.Context) (err error, health bool)
 	Register(ctx context.Context, email string, password string, name string) (err error, accessToken string, refreshToken string, user auth.User)
+	Login(ctx context.Context, email string, password string) (err error, accessToken string, refreshToken string, user auth.User)
 }
 
 func New(addr string) (*Client, error) {
@@ -76,8 +77,9 @@ func (c *Client) Close() error {
 func (c *Client) CheckHealth(ctx context.Context) (err error, health bool) {
 	resp, err := c.api.CheckHealth(ctx, &GRPCauth.Empty{})
 	if err != nil {
+		err = mapper_err_grpc.MapErr(err)
 		slog.DebugContext(ctx, "Failed to check health via gRPC", "error", err)
-		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), false
+		return logger.WrapError(ctx, err), false
 	}
 
 	health = resp.GetHealth()
@@ -95,9 +97,58 @@ func (c *Client) Register(ctx context.Context, email string, password string, na
 		Password: password,
 		Name:     name,
 	})
+
 	if err != nil {
+		err = mapper_err_grpc.MapErr(err)
 		slog.DebugContext(ctx, "Failed to register via gRPC", "error", err)
+		return logger.WrapError(ctx, err), "", "", auth.User{}
+	}
+
+	accessToken = resp.GetAccessToken()
+	refreshToken = resp.GetRefreshToken()
+	idString := resp.GetUser().GetId()
+	email = resp.GetUser().GetEmail()
+	role := resp.GetUser().GetRole()
+	username := resp.GetUser().GetUsername()
+
+	err = mapper_err_grpc.InvalidErr(ctx,
+		mapper_err_grpc.Field{Name: "accessToken", Value: accessToken},
+		mapper_err_grpc.Field{Name: "refreshToken", Value: refreshToken},
+		mapper_err_grpc.Field{Name: "id", Value: idString},
+		mapper_err_grpc.Field{Name: "email", Value: email},
+		mapper_err_grpc.Field{Name: "username", Value: username},
+		mapper_err_grpc.Field{Name: "role", Value: role},
+	)
+
+	if err != nil {
+		return logger.WrapError(ctx, err), "", "", auth.User{}
+	}
+
+	id, err := uuid.Parse(idString)
+	if err != nil {
+		slog.DebugContext(ctx, "Received invalid user ID from gRPC response", "error", err)
 		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), "", "", auth.User{}
+	}
+
+	user, err = auth.New(id, email, username, role)
+	if err != nil {
+		slog.DebugContext(ctx, "Failed to create user from gRPC response", "error", err)
+		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), "", "", auth.User{}
+	}
+
+	return nil, accessToken, refreshToken, user
+}
+
+func (c *Client) Login(ctx context.Context, email string, password string) (err error, accessToken string, refreshToken string, user auth.User) {
+	resp, err := c.api.Login(ctx, &GRPCauth.LoginRequest{
+		Email:    email,
+		Password: password,
+	})
+
+	if err != nil {
+		err = mapper_err_grpc.MapErr(err)
+		slog.DebugContext(ctx, "Failed to login via gRPC", "error", err)
+		return logger.WrapError(ctx, err), "", "", auth.User{}
 	}
 
 	accessToken = resp.GetAccessToken()

@@ -12,6 +12,7 @@ import (
 type AuthService interface {
 	CheckHealth(ctx context.Context) error
 	Register(ctx context.Context, email string, password string, name string) (error, dto.RegisterResponse, string)
+	Login(ctx context.Context, email string, password string) (error, dto.RegisterResponse, string)
 }
 
 func (s *Service) CheckHealth(ctx context.Context) error {
@@ -27,6 +28,22 @@ func (s *Service) CheckHealth(ctx context.Context) error {
 
 func (s *Service) Register(ctx context.Context, email string, password string, name string) (error, dto.RegisterResponse, string) {
 	err, accessToken, refreshToken, user := s.grpcClient.Register(ctx, email, password, name)
+	if err != nil {
+		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), dto.RegisterResponse{}, ""
+	}
+	return nil, dto.RegisterResponse{
+		AccessToken: accessToken,
+		User: dto.User{
+			Id:    user.ID(),
+			Email: user.Email(),
+			Name:  user.Username(),
+			Role:  user.Role(),
+		},
+	}, refreshToken
+}
+
+func (s *Service) Login(ctx context.Context, email string, password string) (error, dto.RegisterResponse, string) {
+	err, accessToken, refreshToken, user := s.grpcClient.Login(ctx, email, password)
 	if err != nil {
 		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), dto.RegisterResponse{}, ""
 	}

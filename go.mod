@@ -3,12 +3,12 @@ module github.com/Weit145/gateway-startup
 go 1.25.5
 
 require (
-	github.com/Weit145/proto-startup v0.1.2-0.20260516122710-a8cf59de9ed1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.4
-	google.golang.org/grpc v1.81.0
+	github.com/weit145/proto-startup v0.1.3
+	google.golang.org/grpc v1.81.1
 )
 
 require (

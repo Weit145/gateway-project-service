@@ -2,7 +2,6 @@ package mapper_err_grpc
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 
@@ -16,18 +15,18 @@ type Field struct {
 	Value string
 }
 
-func MapErr(err error) (interface{}, error) {
-	switch {
-	case errors.Is(err, errs.ErrUnauthorized):
-		return nil, status.Error(codes.Unauthenticated, err.Error())
-	case errors.Is(err, errs.ErrForbidden):
-		return nil, status.Error(codes.PermissionDenied, err.Error())
-	case errors.Is(err, errs.ErrInvalidInput):
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	case errors.Is(err, errs.ErrNotFound):
-		return nil, status.Error(codes.NotFound, err.Error())
+func MapErr(err error) error {
+	switch status.Code(err) {
+	case codes.Unauthenticated:
+		return errs.ErrUnauthorized
+	case codes.PermissionDenied:
+		return errs.ErrForbidden
+	case codes.InvalidArgument:
+		return errs.ErrInvalidInput
+	case codes.NotFound:
+		return errs.ErrNotFound
 	default:
-		return nil, status.Error(codes.Internal, err.Error())
+		return errs.ErrInternal
 	}
 }
 
