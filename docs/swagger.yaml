@@ -1,15 +1,31 @@
 basePath: /
 definitions:
+  dto.LoginRequest:
+    properties:
+      email:
+        maxLength: 32
+        minLength: 4
+        type: string
+      password:
+        maxLength: 32
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
   dto.RegisterRequest:
     properties:
       email:
+        maxLength: 32
+        minLength: 4
         type: string
       name:
-        maxLength: 100
-        minLength: 2
+        maxLength: 32
+        minLength: 4
         type: string
       password:
-        maxLength: 100
+        maxLength: 32
         minLength: 6
         type: string
     required:
@@ -66,6 +82,49 @@ paths:
       summary: Check health
       tags:
       - health
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns an access token. Refresh token
+        is set in an HttpOnly cookie.
+      parameters:
+      - description: Login request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          headers:
+            Set-Cookie:
+              description: refresh_token cookie
+              type: string
+          schema:
+            $ref: '#/definitions/dto.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      summary: Login user
+      tags:
+      - auth
   /auth/register:
     post:
       consumes:

@@ -25,8 +25,9 @@ type Client struct {
 
 type GRPServices interface {
 	CheckHealth(ctx context.Context) (err error, health bool)
-	Register(ctx context.Context, email string, password string, name string) (err error, accessToken string, refreshToken string, user auth.User)
+	Register(ctx context.Context, email string, password string, name string) (err error, health bool)
 	Login(ctx context.Context, email string, password string) (err error, accessToken string, refreshToken string, user auth.User)
+	ConfirmEmail(ctx context.Context, token string) (err error, accessToken string, refreshToken string, user auth.User)
 }
 
 func New(addr string) (*Client, error) {
@@ -91,7 +92,7 @@ func (c *Client) CheckHealth(ctx context.Context) (err error, health bool) {
 	return nil, health
 }
 
-func (c *Client) Register(ctx context.Context, email string, password string, name string) (err error, accessToken string, refreshToken string, user auth.User) {
+func (c *Client) Register(ctx context.Context, email string, password string, name string) (err error, health bool) {
 	resp, err := c.api.Register(ctx, &GRPCauth.RegisterRequest{
 		Email:    email,
 		Password: password,
@@ -101,6 +102,27 @@ func (c *Client) Register(ctx context.Context, email string, password string, na
 	if err != nil {
 		err = mapper_err_grpc.MapErr(err)
 		slog.DebugContext(ctx, "Failed to register via gRPC", "error", err)
+		return logger.WrapError(ctx, err), false
+	}
+
+	health = resp.GetHealth()
+	if health == false {
+		slog.DebugContext(ctx, "Health check returned false from gRPC response")
+		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), false
+	}
+
+	return nil, health
+}
+
+func (c *Client) Login(ctx context.Context, email string, password string) (err error, accessToken string, refreshToken string, user auth.User) {
+	resp, err := c.api.Login(ctx, &GRPCauth.LoginRequest{
+		Email:    email,
+		Password: password,
+	})
+
+	if err != nil {
+		err = mapper_err_grpc.MapErr(err)
+		slog.DebugContext(ctx, "Failed to login via gRPC", "error", err)
 		return logger.WrapError(ctx, err), "", "", auth.User{}
 	}
 
@@ -139,22 +161,21 @@ func (c *Client) Register(ctx context.Context, email string, password string, na
 	return nil, accessToken, refreshToken, user
 }
 
-func (c *Client) Login(ctx context.Context, email string, password string) (err error, accessToken string, refreshToken string, user auth.User) {
-	resp, err := c.api.Login(ctx, &GRPCauth.LoginRequest{
-		Email:    email,
-		Password: password,
+func (c *Client) ConfirmEmail(ctx context.Context, token string) (err error, accessToken string, refreshToken string, user auth.User) {
+	resp, err := c.api.ConfirmEmail(ctx, &GRPCauth.ConfirmRequest{
+		Token: token,
 	})
 
 	if err != nil {
 		err = mapper_err_grpc.MapErr(err)
-		slog.DebugContext(ctx, "Failed to login via gRPC", "error", err)
+		slog.DebugContext(ctx, "Failed to confirm email via gRPC", "error", err)
 		return logger.WrapError(ctx, err), "", "", auth.User{}
 	}
 
 	accessToken = resp.GetAccessToken()
 	refreshToken = resp.GetRefreshToken()
 	idString := resp.GetUser().GetId()
-	email = resp.GetUser().GetEmail()
+	email := resp.GetUser().GetEmail()
 	role := resp.GetUser().GetRole()
 	username := resp.GetUser().GetUsername()
 

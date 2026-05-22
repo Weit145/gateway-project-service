@@ -28,6 +28,10 @@ type RegisterResponse struct {
 	User        User   `json:"user"`
 }
 
+type ConfirmEmailRequest struct {
+	Token string `json:"token" validate:"required"`
+}
+
 func (r *RegisterRequest) Validate(ctx context.Context) error {
 	r.Name = strings.TrimSpace(r.Name)
 	r.Email = strings.TrimSpace(r.Email)

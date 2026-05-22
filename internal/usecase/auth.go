@@ -11,8 +11,9 @@ import (
 
 type AuthService interface {
 	CheckHealth(ctx context.Context) error
-	Register(ctx context.Context, email string, password string, name string) (error, dto.RegisterResponse, string)
+	Register(ctx context.Context, email string, password string, name string) error
 	Login(ctx context.Context, email string, password string) (error, dto.RegisterResponse, string)
+	ConfirmEmail(ctx context.Context, token string) (error, dto.RegisterResponse, string)
 }
 
 func (s *Service) CheckHealth(ctx context.Context) error {
@@ -26,10 +27,21 @@ func (s *Service) CheckHealth(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) Register(ctx context.Context, email string, password string, name string) (error, dto.RegisterResponse, string) {
-	err, accessToken, refreshToken, user := s.grpcClient.Register(ctx, email, password, name)
+func (s *Service) Register(ctx context.Context, email string, password string, name string) error {
+	err, health := s.grpcClient.Register(ctx, email, password, name)
 	if err != nil {
-		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), dto.RegisterResponse{}, ""
+		return logger.WrapError(ctx, err)
+	}
+	if !health {
+		return logger.WrapError(ctx, errs.ErrInternal)
+	}
+	return nil
+}
+
+func (s *Service) Login(ctx context.Context, email string, password string) (error, dto.RegisterResponse, string) {
+	err, accessToken, refreshToken, user := s.grpcClient.Login(ctx, email, password)
+	if err != nil {
+		return logger.WrapError(ctx, err), dto.RegisterResponse{}, ""
 	}
 	return nil, dto.RegisterResponse{
 		AccessToken: accessToken,
@@ -42,10 +54,10 @@ func (s *Service) Register(ctx context.Context, email string, password string, n
 	}, refreshToken
 }
 
-func (s *Service) Login(ctx context.Context, email string, password string) (error, dto.RegisterResponse, string) {
-	err, accessToken, refreshToken, user := s.grpcClient.Login(ctx, email, password)
+func (s *Service) ConfirmEmail(ctx context.Context, token string) (error, dto.RegisterResponse, string) {
+	err, accessToken, refreshToken, user := s.grpcClient.ConfirmEmail(ctx, token)
 	if err != nil {
-		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal)), dto.RegisterResponse{}, ""
+		return logger.WrapError(ctx, err), dto.RegisterResponse{}, ""
 	}
 	return nil, dto.RegisterResponse{
 		AccessToken: accessToken,

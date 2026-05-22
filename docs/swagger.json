@@ -35,6 +35,70 @@
                 }
             }
         },
+        "/auth/login": {
+            "post": {
+                "description": "Authenticates a user and returns an access token. Refresh token is set in an HttpOnly cookie.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login user",
+                "parameters": [
+                    {
+                        "description": "Login request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterResponse"
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "refresh_token cookie"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/register": {
             "post": {
                 "description": "Registers a new user and returns an access token. Refresh token is set in an HttpOnly cookie.",
@@ -101,6 +165,25 @@
         }
     },
     "definitions": {
+        "dto.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 4
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 6
+                }
+            }
+        },
         "dto.RegisterRequest": {
             "type": "object",
             "required": [
@@ -110,16 +193,18 @@
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 4
                 },
                 "name": {
                     "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
+                    "maxLength": 32,
+                    "minLength": 4
                 },
                 "password": {
                     "type": "string",
-                    "maxLength": 100,
+                    "maxLength": 32,
                     "minLength": 6
                 }
             }
