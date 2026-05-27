@@ -13,16 +13,14 @@ import (
 
 // Register godoc
 // @Summary Register user
-// @Description Registers a new user and returns an access token. Refresh token is set in an HttpOnly cookie.
+// @Description Registers a new user and sends an email verification request.
 // @Tags auth
 // @Accept json
 // @Produce json
 // @Param request body dto.RegisterRequest true "Register request"
-// @Success 201 {object} dto.RegisterResponse
-// @Header 201 {string} Set-Cookie "refresh_token cookie"
+// @Success 200 {object} dto.Response
 // @Failure 400 {object} dto.Response
-// @Failure 401 {object} dto.Response
-// @Failure 403 {object} dto.Response
+// @Failure 409 {object} dto.Response
 // @Failure 500 {object} dto.Response
 // @Router /auth/register [post]
 func Register(ser usecase.Services) http.HandlerFunc {
@@ -135,7 +133,12 @@ func ConfirmEmail(ser usecase.Services) http.HandlerFunc {
 			return
 		}
 
-		err, resp, refreshToken := ser.ConfirmEmail(ctx, req.Token)
+		if err := req.Validate(ctx); err != nil {
+			mapper_err.MapErr(w, r, err)
+			return
+		}
+
+		err, resp, refreshToken := ser.ConfirmEmail(ctx, req.Token, req.UserId)
 		if err != nil {
 			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to confirm email", "error", err)
 

@@ -19,6 +19,8 @@ func MapErr(w http.ResponseWriter, r *http.Request, err error) {
 		writeJSON(w, http.StatusBadRequest, dto.Error("invalid request"))
 	case errors.Is(err, errs.ErrNotFound):
 		writeJSON(w, http.StatusNotFound, dto.Error("not found"))
+	case errors.Is(err, errs.ErrAlreadyExists):
+		writeJSON(w, http.StatusConflict, dto.Error("already exists"))
 	default:
 		writeJSON(w, http.StatusInternalServerError, dto.Error("internal server error"))
 	}

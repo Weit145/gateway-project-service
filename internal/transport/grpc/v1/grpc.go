@@ -27,7 +27,7 @@ type GRPServices interface {
 	CheckHealth(ctx context.Context) (err error, health bool)
 	Register(ctx context.Context, email string, password string, name string) (err error, health bool)
 	Login(ctx context.Context, email string, password string) (err error, accessToken string, refreshToken string, user auth.User)
-	ConfirmEmail(ctx context.Context, token string) (err error, accessToken string, refreshToken string, user auth.User)
+	ConfirmEmail(ctx context.Context, token string, userID string) (err error, accessToken string, refreshToken string, user auth.User)
 }
 
 func New(addr string) (*Client, error) {
@@ -161,9 +161,10 @@ func (c *Client) Login(ctx context.Context, email string, password string) (err 
 	return nil, accessToken, refreshToken, user
 }
 
-func (c *Client) ConfirmEmail(ctx context.Context, token string) (err error, accessToken string, refreshToken string, user auth.User) {
+func (c *Client) ConfirmEmail(ctx context.Context, token string, userID string) (err error, accessToken string, refreshToken string, user auth.User) {
 	resp, err := c.api.ConfirmEmail(ctx, &GRPCauth.ConfirmRequest{
-		Token: token,
+		Token:  token,
+		UserID: userID,
 	})
 
 	if err != nil {

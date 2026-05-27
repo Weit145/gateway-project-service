@@ -107,7 +107,7 @@ const docTemplate = `{
         },
         "/auth/register": {
             "post": {
-                "description": "Registers a new user and returns an access token. Refresh token is set in an HttpOnly cookie.",
+                "description": "Registers a new user and sends an email verification request.",
                 "consumes": [
                     "application/json"
                 ],
@@ -130,16 +130,10 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.RegisterResponse"
-                        },
-                        "headers": {
-                            "Set-Cookie": {
-                                "type": "string",
-                                "description": "refresh_token cookie"
-                            }
+                            "$ref": "#/definitions/dto.Response"
                         }
                     },
                     "400": {
@@ -148,14 +142,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/dto.Response"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dto.Response"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/dto.Response"
                         }

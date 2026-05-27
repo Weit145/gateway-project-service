@@ -129,8 +129,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Registers a new user and returns an access token. Refresh token
-        is set in an HttpOnly cookie.
+      description: Registers a new user and sends an email verification request.
       parameters:
       - description: Register request
         in: body
@@ -141,24 +140,16 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
-          headers:
-            Set-Cookie:
-              description: refresh_token cookie
-              type: string
+        "200":
+          description: OK
           schema:
-            $ref: '#/definitions/dto.RegisterResponse'
+            $ref: '#/definitions/dto.Response'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/dto.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dto.Response'
-        "403":
-          description: Forbidden
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/dto.Response'
         "500":

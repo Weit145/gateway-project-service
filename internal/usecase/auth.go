@@ -7,13 +7,14 @@ import (
 	errs "github.com/Weit145/gateway-startup/internal/lib/e"
 	"github.com/Weit145/gateway-startup/internal/logger"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
+	"github.com/google/uuid"
 )
 
 type AuthService interface {
 	CheckHealth(ctx context.Context) error
 	Register(ctx context.Context, email string, password string, name string) error
 	Login(ctx context.Context, email string, password string) (error, dto.RegisterResponse, string)
-	ConfirmEmail(ctx context.Context, token string) (error, dto.RegisterResponse, string)
+	ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (error, dto.RegisterResponse, string)
 }
 
 func (s *Service) CheckHealth(ctx context.Context) error {
@@ -54,8 +55,8 @@ func (s *Service) Login(ctx context.Context, email string, password string) (err
 	}, refreshToken
 }
 
-func (s *Service) ConfirmEmail(ctx context.Context, token string) (error, dto.RegisterResponse, string) {
-	err, accessToken, refreshToken, user := s.grpcClient.ConfirmEmail(ctx, token)
+func (s *Service) ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (error, dto.RegisterResponse, string) {
+	err, accessToken, refreshToken, user := s.grpcClient.ConfirmEmail(ctx, token, userID.String())
 	if err != nil {
 		return logger.WrapError(ctx, err), dto.RegisterResponse{}, ""
 	}

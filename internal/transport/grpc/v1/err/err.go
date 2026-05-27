@@ -25,6 +25,8 @@ func MapErr(err error) error {
 		return errs.ErrInvalidInput
 	case codes.NotFound:
 		return errs.ErrNotFound
+	case codes.AlreadyExists:
+		return errs.ErrAlreadyExists
 	default:
 		return errs.ErrInternal
 	}

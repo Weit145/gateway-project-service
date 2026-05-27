@@ -7,7 +7,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.4
-	github.com/weit145/proto-startup v0.1.4
+	github.com/weit145/proto-startup v0.1.5
 	google.golang.org/grpc v1.81.1
 )
 

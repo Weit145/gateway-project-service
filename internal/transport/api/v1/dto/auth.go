@@ -29,7 +29,24 @@ type RegisterResponse struct {
 }
 
 type ConfirmEmailRequest struct {
-	Token string `json:"token" validate:"required"`
+	Token  string    `json:"token" validate:"required"`
+	UserId uuid.UUID `json:"userId" validate:"required"`
+}
+
+func (r *ConfirmEmailRequest) Validate(ctx context.Context) error {
+	r.Token = strings.TrimSpace(r.Token)
+
+	if r.Token == "" {
+		slog.DebugContext(ctx, "Validation failed Token")
+		return logger.WrapError(ctx, errs.ErrInvalidInput)
+	}
+
+	if r.UserId == uuid.Nil {
+		slog.DebugContext(ctx, "Validation failed UserId")
+		return logger.WrapError(ctx, errs.ErrInvalidInput)
+	}
+
+	return nil
 }
 
 func (r *RegisterRequest) Validate(ctx context.Context) error {
