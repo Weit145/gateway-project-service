@@ -43,6 +43,8 @@ func Register(ser usecase.Services) http.HandlerFunc {
 			return
 		}
 
+		ctx = logger.WithLogEmail(ctx, req.Email)
+
 		err = ser.Register(ctx, req.Email, req.Password, req.Name)
 		if err != nil {
 			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to register user", "error", err)
@@ -93,6 +95,8 @@ func Login(ser usecase.Services) http.HandlerFunc {
 			return
 		}
 
+		ctx = logger.WithLogEmail(ctx, req.Email)
+
 		err, resp, refreshToken := ser.Login(ctx, req.Email, req.Password)
 		if err != nil {
 			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to login user", "error", err)
@@ -119,6 +123,21 @@ func Login(ser usecase.Services) http.HandlerFunc {
 	}
 }
 
+// ConfirmEmail godoc
+// @Summary Confirm user email
+// @Description Confirms a user email by verification token and returns an access token. Refresh token is set in an HttpOnly cookie.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dto.ConfirmEmailRequest true "Confirm email request"
+// @Success 201 {object} dto.RegisterResponse
+// @Header 201 {string} Set-Cookie "refresh_token cookie"
+// @Failure 400 {object} dto.Response
+// @Failure 401 {object} dto.Response
+// @Failure 403 {object} dto.Response
+// @Failure 404 {object} dto.Response
+// @Failure 500 {object} dto.Response
+// @Router /auth/confirm-email [post]
 func ConfirmEmail(ser usecase.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -137,6 +156,8 @@ func ConfirmEmail(ser usecase.Services) http.HandlerFunc {
 			mapper_err.MapErr(w, r, err)
 			return
 		}
+
+		ctx = logger.WithLogId(ctx, req.UserId)
 
 		err, resp, refreshToken := ser.ConfirmEmail(ctx, req.Token, req.UserId)
 		if err != nil {

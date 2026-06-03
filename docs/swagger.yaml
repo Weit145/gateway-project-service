@@ -1,5 +1,15 @@
 basePath: /
 definitions:
+  dto.ConfirmEmailRequest:
+    properties:
+      token:
+        type: string
+      userId:
+        type: string
+    required:
+    - token
+    - userId
+    type: object
   dto.LoginRequest:
     properties:
       email:
@@ -82,6 +92,53 @@ paths:
       summary: Check health
       tags:
       - health
+  /auth/confirm-email:
+    post:
+      consumes:
+      - application/json
+      description: Confirms a user email by verification token and returns an access
+        token. Refresh token is set in an HttpOnly cookie.
+      parameters:
+      - description: Confirm email request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ConfirmEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          headers:
+            Set-Cookie:
+              description: refresh_token cookie
+              type: string
+          schema:
+            $ref: '#/definitions/dto.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      summary: Confirm user email
+      tags:
+      - auth
   /auth/login:
     post:
       consumes:

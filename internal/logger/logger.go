@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type HandlerMiddlware struct {
@@ -25,17 +27,29 @@ type keyType int
 const key = keyType(0)
 
 type logCtx struct {
-	Ip string
+	Ip    string
+	Id    uuid.UUID
+	Name  string
+	Email string
 	// ListID uuid.UUID
 }
 
 func (h *HandlerMiddlware) Handle(ctx context.Context, rec slog.Record) error {
-	if c, ok := ctx.Value(key).(logCtx); ok {
+	if c, ok := ctx.Value(key).(*logCtx); ok {
 		// if c.ListID != uuid.Nil {
 		// 	rec.Add("listID", c.ListID)
 		// }
 		if c.Ip != "" {
 			rec.Add("ip", c.Ip)
+		}
+		if c.Id != uuid.Nil {
+			rec.Add("id", c.Id)
+		}
+		if c.Email != "" {
+			rec.Add("email", c.Email)
+		}
+		if c.Name != "" {
+			rec.Add("name", c.Name)
 		}
 	}
 	return h.next.Handle(ctx, rec)
@@ -62,7 +76,37 @@ func WithLogIp(ctx context.Context, ip string) context.Context {
 		c.Ip = ip
 		return context.WithValue(ctx, key, c)
 	}
-	return context.WithValue(ctx, key, logCtx{Ip: ip})
+	return context.WithValue(ctx, key, &logCtx{Ip: ip})
+}
+
+func WithLogId(ctx context.Context, id uuid.UUID) context.Context {
+	if c, ok := ctx.Value(key).(logCtx); ok {
+		c.Id = id
+		return context.WithValue(ctx, key, c)
+	}
+	return context.WithValue(ctx, key, &logCtx{Id: id})
+}
+
+func WithLogEmail(ctx context.Context, email string) context.Context {
+	email = strings.TrimSpace(email)
+
+	if len(email) > 5 {
+		email = email[:5] + strings.Repeat("*", len(email)-5)
+	}
+	if c, ok := ctx.Value(key).(*logCtx); ok {
+		c.Email = email
+		return context.WithValue(ctx, key, c)
+	}
+	return context.WithValue(ctx, key, &logCtx{Email: email})
+}
+
+func WithLogName(ctx context.Context, name string) context.Context {
+	name = strings.TrimSpace(name)
+	if c, ok := ctx.Value(key).(*logCtx); ok {
+		c.Name = name
+		return context.WithValue(ctx, key, c)
+	}
+	return context.WithValue(ctx, key, &logCtx{Name: name})
 }
 
 type errorWithLogCtx struct {

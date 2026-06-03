@@ -25,7 +25,11 @@ import (
 func main() {
 
 	//Init config
-	cfg := config.InitConfig()
+	err, cfg := config.InitConfig()
+	if err != nil {
+		slog.Error("init config", "error", err)
+		os.Exit(1)
+	}
 
 	//Init logger
 	logger.InitLogging(cfg.Log.Level)
