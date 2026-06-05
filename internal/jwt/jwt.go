@@ -16,15 +16,15 @@ type accessClaims struct {
 	gojwt.RegisteredClaims
 }
 
-func CheckToken(authHeader string, publicKey *rsa.PublicKey) (uuid.UUID, error) {
+func CheckToken(authHeader string, publicKey *rsa.PublicKey) (uuid.UUID, uuid.UUID, error) {
 	if publicKey == nil {
-		return uuid.Nil, fmt.Errorf("JWT public key is not configured: %w", errs.ErrInternal)
+		return uuid.Nil, uuid.Nil, fmt.Errorf("JWT public key is not configured: %w", errs.ErrInternal)
 	}
 
 	authHeader = strings.TrimSpace(authHeader)
 	tokenString, ok := strings.CutPrefix(authHeader, "Bearer ")
 	if !ok || strings.TrimSpace(tokenString) == "" {
-		return uuid.Nil, fmt.Errorf("missing bearer token: %w", errs.ErrUnauthorized)
+		return uuid.Nil, uuid.Nil, fmt.Errorf("missing bearer token: %w", errs.ErrUnauthorized)
 	}
 
 	claims := &accessClaims{}
@@ -41,20 +41,25 @@ func CheckToken(authHeader string, publicKey *rsa.PublicKey) (uuid.UUID, error) 
 		gojwt.WithIssuedAt(),
 	)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid bearer token: %v: %w", err, errs.ErrUnauthorized)
+		return uuid.Nil, uuid.Nil, fmt.Errorf("invalid bearer token: %v: %w", err, errs.ErrUnauthorized)
 	}
 	if !token.Valid {
-		return uuid.Nil, fmt.Errorf("invalid bearer token: %w", errs.ErrUnauthorized)
+		return uuid.Nil, uuid.Nil, fmt.Errorf("invalid bearer token: %w", errs.ErrUnauthorized)
 	}
 
 	if claims.Type != "access" {
-		return uuid.Nil, fmt.Errorf("invalid token type %q: %w", claims.Type, errs.ErrUnauthorized)
+		return uuid.Nil, uuid.Nil, fmt.Errorf("invalid token type %q: %w", claims.Type, errs.ErrUnauthorized)
 	}
 
 	userID, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid token subject: %v: %w", err, errs.ErrUnauthorized)
+		return uuid.Nil, uuid.Nil, fmt.Errorf("invalid token subject: %v: %w", err, errs.ErrUnauthorized)
 	}
 
-	return userID, nil
+	jwtId, err := uuid.Parse(claims.ID)
+	if err != nil {
+		return uuid.Nil, uuid.Nil, fmt.Errorf("invalid token ID: %v: %w", err, errs.ErrUnauthorized)
+	}
+
+	return userID, jwtId, nil
 }

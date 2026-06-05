@@ -10,6 +10,7 @@ import (
 	"github.com/Weit145/gateway-startup/internal/jwt"
 	errs "github.com/Weit145/gateway-startup/internal/lib/e"
 	"github.com/Weit145/gateway-startup/internal/logger"
+	"github.com/Weit145/gateway-startup/internal/transport/api/v1/authctx"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
 	mapper_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
 )
@@ -58,14 +59,16 @@ func CheckLoginWithPublicKey(publicKey *rsa.PublicKey) func(http.Handler) http.H
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			userID, err := jwt.CheckToken(r.Header.Get("Authorization"), publicKey)
+			userID, jwtId, err := jwt.CheckToken(r.Header.Get("Authorization"), publicKey)
 			if err != nil {
 				slog.DebugContext(ctx, "failed to check bearer token", "error", err)
 				mapper_err.MapErr(w, r, err)
 				return
 			}
 
+			ctx = authctx.WithUserID(ctx, userID)
 			ctx = logger.WithLogId(ctx, userID)
+			ctx = logger.WithLogJwtId(ctx, jwtId)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

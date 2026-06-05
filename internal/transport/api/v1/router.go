@@ -21,7 +21,7 @@ func NewRouter(ser usecase.Services) *mux.Router {
 	auth.HandleFunc("/register", handler.Register(ser)).Methods(http.MethodPost)
 	auth.HandleFunc("/confirm-email", handler.ConfirmEmail(ser)).Methods(http.MethodPost)
 	auth.HandleFunc("/login", handler.Login(ser)).Methods(http.MethodPost)
-
+	auth.Handle("/logout", middleware.CheckLogin(handler.Logout(ser))).Methods(http.MethodPost)
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	return r

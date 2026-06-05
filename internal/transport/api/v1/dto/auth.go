@@ -93,3 +93,6 @@ func (r *LoginRequest) Validate(ctx context.Context) error {
 
 	return nil
 }
+
+type LogoutRequest struct {
+}

@@ -5,7 +5,9 @@ import (
 	"log/slog"
 	"net/http"
 
+	errs "github.com/Weit145/gateway-startup/internal/lib/e"
 	"github.com/Weit145/gateway-startup/internal/logger"
+	"github.com/Weit145/gateway-startup/internal/transport/api/v1/authctx"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
 	mapper_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
 	"github.com/Weit145/gateway-startup/internal/usecase"
@@ -182,5 +184,70 @@ func ConfirmEmail(ser usecase.Services) http.HandlerFunc {
 		)
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(resp)
+	}
+}
+
+// Logout godoc
+// @Summary Logout user
+// @Description Requires "Bearer <access_token>" in Authorization and revokes the refresh_token from the HttpOnly cookie.
+// @Tags auth
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.Response
+// @Header 200 {string} Set-Cookie "Clears the refresh_token cookie"
+// @Failure 400 {object} dto.Response
+// @Failure 401 {object} dto.Response
+// @Failure 500 {object} dto.Response
+// @Router /auth/logout [post]
+func Logout(ser usecase.Services) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := r.Context()
+		userID, ok := authctx.UserID(ctx)
+		if !ok {
+			slog.ErrorContext(ctx, "user ID not found in context")
+			mapper_err.MapErr(w, r, errs.ErrUnauthorized)
+			return
+		}
+
+		cookie, err := r.Cookie("refresh_token")
+		if err != nil {
+			slog.DebugContext(ctx, "cookie not found")
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(dto.Response{Status: "refresh token is required"})
+			return
+		}
+
+		refreshToken := cookie.Value
+		if refreshToken == "" {
+			slog.DebugContext(ctx, "refresh token not found in cookie")
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(dto.Response{Status: "refresh token is required"})
+			return
+		}
+
+		err = ser.Logout(ctx, userID, refreshToken)
+		if err != nil {
+			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to Logout user", "error", err)
+			mapper_err.MapErr(w, r, err)
+			return
+		}
+
+		slog.DebugContext(ctx, "successful Logout")
+
+		w.Header().Set("Content-Type", "application/json")
+		http.SetCookie(
+			w,
+			&http.Cookie{
+				Name:     "refresh_token",
+				Value:    "",
+				HttpOnly: true,
+				Secure:   true,
+				SameSite: http.SameSiteStrictMode,
+				MaxAge:   -1,
+			},
+		)
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(dto.Response{Status: "ok"})
 	}
 }

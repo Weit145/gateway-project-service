@@ -28,6 +28,7 @@ type GRPServices interface {
 	Register(ctx context.Context, email string, password string, name string) (err error, health bool)
 	Login(ctx context.Context, email string, password string) (err error, accessToken string, refreshToken string, user auth.User)
 	ConfirmEmail(ctx context.Context, token string, userID string) (err error, accessToken string, refreshToken string, user auth.User)
+	Logout(ctx context.Context, userID string, refreshToken string) error
 }
 
 func New(addr string) (*Client, error) {
@@ -206,4 +207,19 @@ func (c *Client) ConfirmEmail(ctx context.Context, token string, userID string) 
 	}
 
 	return nil, accessToken, refreshToken, user
+}
+
+func (c *Client) Logout(ctx context.Context, userID string, refreshToken string) error {
+	_, err := c.api.Logout(ctx, &GRPCauth.LogOutRequest{
+		UserID:       userID,
+		RefreshToken: refreshToken,
+	})
+
+	if err != nil {
+		err = mapper_err_grpc.MapErr(err)
+		slog.DebugContext(ctx, "Failed to Logout via gRPC", "error", err)
+		return logger.WrapError(ctx, err)
+	}
+
+	return nil
 }

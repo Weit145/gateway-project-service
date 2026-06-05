@@ -28,6 +28,7 @@ const key = keyType(0)
 
 type logCtx struct {
 	Ip    string
+	JwtId uuid.UUID
 	Id    uuid.UUID
 	Name  string
 	Email string
@@ -41,6 +42,9 @@ func (h *HandlerMiddlware) Handle(ctx context.Context, rec slog.Record) error {
 		// }
 		if c.Ip != "" {
 			rec.Add("ip", c.Ip)
+		}
+		if c.JwtId != uuid.Nil {
+			rec.Add("jwtID", c.JwtId)
 		}
 		if c.Id != uuid.Nil {
 			rec.Add("id", c.Id)
@@ -85,6 +89,14 @@ func WithLogId(ctx context.Context, id uuid.UUID) context.Context {
 		return context.WithValue(ctx, key, c)
 	}
 	return context.WithValue(ctx, key, &logCtx{Id: id})
+}
+
+func WithLogJwtId(ctx context.Context, jwtId uuid.UUID) context.Context {
+	if c, ok := ctx.Value(key).(logCtx); ok {
+		c.JwtId = jwtId
+		return context.WithValue(ctx, key, c)
+	}
+	return context.WithValue(ctx, key, &logCtx{JwtId: jwtId})
 }
 
 func WithLogEmail(ctx context.Context, email string) context.Context {

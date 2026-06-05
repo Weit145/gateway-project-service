@@ -15,6 +15,7 @@ type AuthService interface {
 	Register(ctx context.Context, email string, password string, name string) error
 	Login(ctx context.Context, email string, password string) (error, dto.RegisterResponse, string)
 	ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (error, dto.RegisterResponse, string)
+	Logout(ctx context.Context, userID uuid.UUID, refreshToken string) error
 }
 
 func (s *Service) CheckHealth(ctx context.Context) error {
@@ -69,4 +70,12 @@ func (s *Service) ConfirmEmail(ctx context.Context, token string, userID uuid.UU
 			Role:  user.Role(),
 		},
 	}, refreshToken
+}
+
+func (s *Service) Logout(ctx context.Context, userID uuid.UUID, refreshToken string) error {
+	err := s.grpcClient.Logout(ctx, userID.String(), refreshToken)
+	if err != nil {
+		return logger.WrapError(ctx, err)
+	}
+	return nil
 }
