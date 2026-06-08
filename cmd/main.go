@@ -29,7 +29,7 @@ import (
 func main() {
 
 	//Init config
-	err, cfg := config.InitConfig()
+	cfg, err := config.InitConfig()
 	if err != nil {
 		slog.Error("init config", "error", err)
 		os.Exit(1)

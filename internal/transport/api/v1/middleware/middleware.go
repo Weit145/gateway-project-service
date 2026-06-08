@@ -40,7 +40,7 @@ func Logging(next http.Handler) http.Handler {
 }
 
 func CheckLogin(next http.Handler) http.Handler {
-	err, cfg := config.InitConfig()
+	cfg, err := config.InitConfig()
 	if err != nil {
 		slog.Error("failed to load JWT public key", "error", err)
 		return authConfigErrorMiddleware(next)

@@ -4,72 +4,63 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Weit145/gateway-startup/internal/domain/auth"
+	"github.com/Weit145/gateway-startup/internal/domain/health"
 	errs "github.com/Weit145/gateway-startup/internal/lib/e"
 	"github.com/Weit145/gateway-startup/internal/logger"
-	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
 	"github.com/google/uuid"
 )
 
 type AuthService interface {
-	CheckHealth(ctx context.Context) error
+	CheckHealthAuth(ctx context.Context) (*health.Health, error)
 	Register(ctx context.Context, email string, password string, name string) error
-	Login(ctx context.Context, email string, password string) (error, dto.RegisterResponse, string)
-	ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (error, dto.RegisterResponse, string)
+	Login(ctx context.Context, email string, password string) (auth.User, auth.Tokens, error)
+	ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (auth.User, auth.Tokens, error)
 	Logout(ctx context.Context, userID uuid.UUID, refreshToken string) error
+	RefreshToken(ctx context.Context, refreshToken string) (auth.User, auth.Tokens, error)
 }
 
-func (s *Service) CheckHealth(ctx context.Context) error {
-	err, health := s.grpcClient.CheckHealth(ctx)
+func (s *Service) CheckHealthAuth(ctx context.Context) (*health.Health, error) {
+
+	authStatus := "success"
+	bdHealth := "success"
+	authHealthy, grpcErr := s.grpcClient.CheckHealth(ctx)
+	if grpcErr != nil || !authHealthy {
+		authStatus = "error"
+		bdHealth = "error"
+	}
+
+	authHealth, err := health.NewHealth(ctx, "auth", authStatus, &bdHealth)
 	if err != nil {
-		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal))
+		return nil, logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal))
 	}
-	if !health {
-		return logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal))
-	}
-	return nil
+
+	return &authHealth, nil
 }
 
 func (s *Service) Register(ctx context.Context, email string, password string, name string) error {
-	err, health := s.grpcClient.Register(ctx, email, password, name)
+	err := s.grpcClient.Register(ctx, email, password, name)
 	if err != nil {
 		return logger.WrapError(ctx, err)
-	}
-	if !health {
-		return logger.WrapError(ctx, errs.ErrInternal)
 	}
 	return nil
 }
 
-func (s *Service) Login(ctx context.Context, email string, password string) (error, dto.RegisterResponse, string) {
-	err, accessToken, refreshToken, user := s.grpcClient.Login(ctx, email, password)
+func (s *Service) Login(ctx context.Context, email string, password string) (auth.User, auth.Tokens, error) {
+	user, tokens, err := s.grpcClient.Login(ctx, email, password)
 	if err != nil {
-		return logger.WrapError(ctx, err), dto.RegisterResponse{}, ""
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, err)
 	}
-	return nil, dto.RegisterResponse{
-		AccessToken: accessToken,
-		User: dto.User{
-			Id:    user.ID(),
-			Email: user.Email(),
-			Name:  user.Username(),
-			Role:  user.Role(),
-		},
-	}, refreshToken
+
+	return user, tokens, nil
 }
 
-func (s *Service) ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (error, dto.RegisterResponse, string) {
-	err, accessToken, refreshToken, user := s.grpcClient.ConfirmEmail(ctx, token, userID.String())
+func (s *Service) ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (auth.User, auth.Tokens, error) {
+	user, tokens, err := s.grpcClient.ConfirmEmail(ctx, token, userID.String())
 	if err != nil {
-		return logger.WrapError(ctx, err), dto.RegisterResponse{}, ""
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, err)
 	}
-	return nil, dto.RegisterResponse{
-		AccessToken: accessToken,
-		User: dto.User{
-			Id:    user.ID(),
-			Email: user.Email(),
-			Name:  user.Username(),
-			Role:  user.Role(),
-		},
-	}, refreshToken
+	return user, tokens, nil
 }
 
 func (s *Service) Logout(ctx context.Context, userID uuid.UUID, refreshToken string) error {
@@ -78,4 +69,12 @@ func (s *Service) Logout(ctx context.Context, userID uuid.UUID, refreshToken str
 		return logger.WrapError(ctx, err)
 	}
 	return nil
+}
+
+func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (auth.User, auth.Tokens, error) {
+	user, tokens, err := s.grpcClient.RefreshToken(ctx, refreshToken)
+	if err != nil {
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, err)
+	}
+	return user, tokens, nil
 }

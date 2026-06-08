@@ -99,7 +99,7 @@ func Login(ser usecase.Services) http.HandlerFunc {
 
 		ctx = logger.WithLogEmail(ctx, req.Email)
 
-		err, resp, refreshToken := ser.Login(ctx, req.Email, req.Password)
+		user, tokens, err := ser.Login(ctx, req.Email, req.Password)
 		if err != nil {
 			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to login user", "error", err)
 
@@ -108,13 +108,14 @@ func Login(ser usecase.Services) http.HandlerFunc {
 		}
 
 		slog.DebugContext(ctx, "successful login")
+		resp := dto.NewRegisterResponse(user, tokens)
 
 		w.Header().Set("Content-Type", "application/json")
 		http.SetCookie(
 			w,
 			&http.Cookie{
 				Name:     "refresh_token",
-				Value:    refreshToken,
+				Value:    tokens.RefreshToken(),
 				HttpOnly: true,
 				Secure:   true,
 				SameSite: http.SameSiteStrictMode,
@@ -161,7 +162,7 @@ func ConfirmEmail(ser usecase.Services) http.HandlerFunc {
 
 		ctx = logger.WithLogId(ctx, req.UserId)
 
-		err, resp, refreshToken := ser.ConfirmEmail(ctx, req.Token, req.UserId)
+		user, tokens, err := ser.ConfirmEmail(ctx, req.Token, req.UserId)
 		if err != nil {
 			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to confirm email", "error", err)
 
@@ -170,13 +171,14 @@ func ConfirmEmail(ser usecase.Services) http.HandlerFunc {
 		}
 
 		slog.DebugContext(ctx, "successful email confirmation")
+		resp := dto.NewRegisterResponse(user, tokens)
 
 		w.Header().Set("Content-Type", "application/json")
 		http.SetCookie(
 			w,
 			&http.Cookie{
 				Name:     "refresh_token",
-				Value:    refreshToken,
+				Value:    tokens.RefreshToken(),
 				HttpOnly: true,
 				Secure:   true,
 				SameSite: http.SameSiteStrictMode,
@@ -249,5 +251,53 @@ func Logout(ser usecase.Services) http.HandlerFunc {
 		)
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(dto.Response{Status: "ok"})
+	}
+}
+
+// RefreshToken godoc
+// @Summary Refresh access token
+// @Description Validates the refresh_token HttpOnly cookie and returns a new access token.
+// @Tags auth
+// @Produce json
+// @Param Cookie header string true "refresh_token=<token>"
+// @Success 200 {object} dto.RegisterResponse
+// @Failure 400 {object} dto.Response
+// @Failure 401 {object} dto.Response
+// @Failure 404 {object} dto.Response
+// @Failure 500 {object} dto.Response
+// @Router /auth/refresh-token [post]
+func RefreshToken(ser usecase.Services) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		cookie, err := r.Cookie("refresh_token")
+		if err != nil {
+			slog.DebugContext(ctx, "cookie not found")
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(dto.Response{Status: "refresh token is required"})
+			return
+		}
+
+		refreshToken := cookie.Value
+		if refreshToken == "" {
+			slog.DebugContext(ctx, "refresh token not found in cookie")
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(dto.Response{Status: "refresh token is required"})
+			return
+		}
+
+		user, tokens, err := ser.RefreshToken(ctx, refreshToken)
+		if err != nil {
+			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to refresh token", "error", err)
+			mapper_err.MapErr(w, r, err)
+			return
+		}
+
+		slog.DebugContext(ctx, "successful token refresh")
+		resp := dto.NewRegisterResponse(user, tokens)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(resp)
 	}
 }

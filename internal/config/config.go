@@ -59,12 +59,12 @@ func loadJWTPublicKey(path string) (*rsa.PublicKey, error) {
 	return publicKey, nil
 }
 
-func InitConfig() (error, Config) {
+func InitConfig() (Config, error) {
 	jwtPublicKeyPath := envOrDefault("JWT_PUBLIC_KEY_PATH", "/run/secrets/jwt_public.pem")
 	jwtPublicKey, err := loadJWTPublicKey(jwtPublicKeyPath)
 
 	if err != nil {
-		return fmt.Errorf("Warning: failed to load JWT public key from %q: %v\n", jwtPublicKeyPath, err), Config{}
+		return Config{}, fmt.Errorf("Warning: failed to load JWT public key from %q: %v\n", jwtPublicKeyPath, err)
 	}
 
 	cfg := Config{
@@ -82,5 +82,5 @@ func InitConfig() (error, Config) {
 			PublicKey:     jwtPublicKey,
 		},
 	}
-	return nil, cfg
+	return cfg, nil
 }

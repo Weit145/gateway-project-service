@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/Weit145/gateway-startup/internal/domain/auth"
 	errs "github.com/Weit145/gateway-startup/internal/lib/e"
 	"github.com/Weit145/gateway-startup/internal/logger"
 	"github.com/google/uuid"
@@ -26,6 +27,18 @@ type RegisterRequest struct {
 type RegisterResponse struct {
 	AccessToken string `json:"access_token"`
 	User        User   `json:"user"`
+}
+
+func NewRegisterResponse(user auth.User, tokens auth.Tokens) RegisterResponse {
+	return RegisterResponse{
+		AccessToken: tokens.AccessToken(),
+		User: User{
+			Id:    user.ID(),
+			Email: user.Email(),
+			Name:  user.Username(),
+			Role:  user.Role(),
+		},
+	}
 }
 
 type ConfirmEmailRequest struct {

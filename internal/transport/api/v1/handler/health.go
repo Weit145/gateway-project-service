@@ -16,14 +16,22 @@ import (
 // @Description Checks gateway and auth service availability.
 // @Tags health
 // @Produce json
-// @Success 200 {object} dto.Response
+// @Success 200 {object} dto.HealthResponse
 // @Failure 500 {object} dto.Response
 // @Router /_health [get]
 func Health(ser usecase.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		ctx := r.Context()
-		err := ser.CheckHealth(ctx)
+
+		gatewayHealth, err := ser.CheckHealthGateway(ctx)
+		if err != nil {
+			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to check health gateway", "error", err)
+			mapper_err.MapErr(w, r, err)
+			return
+		}
+
+		authHealth, err := ser.CheckHealthAuth(ctx)
 		if err != nil {
 			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to check health", "error", err)
 
@@ -32,8 +40,10 @@ func Health(ser usecase.Services) http.HandlerFunc {
 		}
 		slog.DebugContext(ctx, "successful _health")
 
+		response := dto.NewHealthResponse(gatewayHealth, authHealth)
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(dto.Response{Status: "ok"})
+		_ = json.NewEncoder(w).Encode(response)
 	}
 }
