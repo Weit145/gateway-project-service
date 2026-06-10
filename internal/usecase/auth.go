@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Weit145/gateway-startup/internal/domain/auth"
 	"github.com/Weit145/gateway-startup/internal/domain/health"
@@ -23,16 +22,19 @@ type AuthService interface {
 func (s *Service) CheckHealthAuth(ctx context.Context) (*health.Health, error) {
 
 	authStatus := "success"
-	bdHealth := "success"
+	dbHealth := "success"
 	authHealthy, grpcErr := s.grpcClient.CheckHealth(ctx)
-	if grpcErr != nil || !authHealthy {
+	if grpcErr != nil {
 		authStatus = "error"
-		bdHealth = "error"
+		dbHealth = "error"
+	}
+	if !authHealthy {
+		dbHealth = "error"
 	}
 
-	authHealth, err := health.NewHealth(ctx, "auth", authStatus, &bdHealth)
+	authHealth, err := health.NewHealth(ctx, "auth", authStatus, &dbHealth)
 	if err != nil {
-		return nil, logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal))
+		return nil, logger.WrapError(ctx, errs.ErrInternal)
 	}
 
 	return &authHealth, nil

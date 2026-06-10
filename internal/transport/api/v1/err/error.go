@@ -1,4 +1,4 @@
-package mapper_err
+package router_err
 
 import (
 	"encoding/json"
@@ -30,4 +30,14 @@ func writeJSON(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(body)
+}
+
+func DeocdeFaild(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusBadRequest)
+	_ = json.NewEncoder(w).Encode(dto.Response{Status: "invalid request"})
+}
+
+func CookieFaild(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusBadRequest)
+	_ = json.NewEncoder(w).Encode(dto.Response{Status: "refresh token is required"})
 }

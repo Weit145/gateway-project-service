@@ -1,8 +1,11 @@
 package auth
 
 import (
+	"context"
 	"fmt"
-	"strings"
+
+	"github.com/Weit145/gateway-startup/internal/lib/valid"
+	"github.com/Weit145/gateway-startup/internal/logger"
 )
 
 type Tokens struct {
@@ -10,15 +13,15 @@ type Tokens struct {
 	refreshToken string
 }
 
-func NewTokens(accessToken string, refreshToken string) (Tokens, error) {
-	accessToken = strings.TrimSpace(accessToken)
-	if accessToken == "" {
-		return Tokens{}, fmt.Errorf("invalid access token")
+func NewTokens(ctx context.Context, accessToken string, refreshToken string) (Tokens, error) {
+	accessToken, err := valid.ValidateOpaqueValue(ctx, accessToken)
+	if err != nil {
+		return Tokens{}, logger.WrapError(ctx, fmt.Errorf("invalid access token: %w", err))
 	}
 
-	refreshToken = strings.TrimSpace(refreshToken)
-	if refreshToken == "" {
-		return Tokens{}, fmt.Errorf("invalid refresh token")
+	refreshToken, err = valid.ValidateOpaqueValue(ctx, refreshToken)
+	if err != nil {
+		return Tokens{}, logger.WrapError(ctx, fmt.Errorf("invalid refresh token: %w", err))
 	}
 
 	return Tokens{

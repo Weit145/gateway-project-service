@@ -12,7 +12,7 @@ import (
 	"github.com/Weit145/gateway-startup/internal/logger"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/authctx"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
-	mapper_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
+	router_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
 )
 
 func Recovery(next http.Handler) http.Handler {
@@ -62,7 +62,7 @@ func CheckLoginWithPublicKey(publicKey *rsa.PublicKey) func(http.Handler) http.H
 			userID, jwtId, err := jwt.CheckToken(r.Header.Get("Authorization"), publicKey)
 			if err != nil {
 				slog.DebugContext(ctx, "failed to check bearer token", "error", err)
-				mapper_err.MapErr(w, r, err)
+				router_err.MapErr(w, r, err)
 				return
 			}
 
@@ -76,6 +76,6 @@ func CheckLoginWithPublicKey(publicKey *rsa.PublicKey) func(http.Handler) http.H
 
 func authConfigErrorMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		mapper_err.MapErr(w, r, errs.ErrInternal)
+		router_err.MapErr(w, r, errs.ErrInternal)
 	})
 }

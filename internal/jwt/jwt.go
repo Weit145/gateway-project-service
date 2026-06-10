@@ -12,7 +12,6 @@ import (
 
 type accessClaims struct {
 	Type string `json:"typ"`
-
 	gojwt.RegisteredClaims
 }
 

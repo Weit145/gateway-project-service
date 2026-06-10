@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/mail"
+	"strings"
 
 	errs "github.com/Weit145/gateway-startup/internal/lib/e"
 	"google.golang.org/grpc/codes"
@@ -34,9 +36,16 @@ func MapErr(err error) error {
 
 func InvalidErr(ctx context.Context, fields ...Field) error {
 	for _, field := range fields {
-		if field.Value == "" {
+		if strings.TrimSpace(field.Value) == "" {
 			slog.DebugContext(ctx, "Received invalid "+field.Name+" from gRPC response")
 			return fmt.Errorf(field.Name+" is required: %w", errs.ErrInvalidInput)
+		}
+		if field.Name == "email" {
+			address, err := mail.ParseAddress(field.Value)
+			if err != nil || address.Address != field.Value {
+				slog.DebugContext(ctx, "invalid email", slog.String("field", field.Name))
+				return status.Error(codes.InvalidArgument, field.Name+" must be a valid email")
+			}
 		}
 	}
 	return nil

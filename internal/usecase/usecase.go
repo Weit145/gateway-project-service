@@ -7,11 +7,11 @@ import (
 	"github.com/Weit145/gateway-startup/internal/domain/health"
 	errs "github.com/Weit145/gateway-startup/internal/lib/e"
 	"github.com/Weit145/gateway-startup/internal/logger"
-	"github.com/Weit145/gateway-startup/internal/transport/grpc/v1"
+	"github.com/Weit145/gateway-startup/internal/usecase/port"
 )
 
 type Service struct {
-	grpcClient grpc.GRPServices
+	grpcClient port.GRPServices
 }
 
 type Services interface {
@@ -19,7 +19,7 @@ type Services interface {
 	AuthService
 }
 
-func NewServices(grpcClient grpc.GRPServices) *Service {
+func NewServices(grpcClient port.GRPServices) *Service {
 	return &Service{
 		grpcClient: grpcClient,
 	}

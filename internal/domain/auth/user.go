@@ -1,9 +1,12 @@
 package auth
 
 import (
+	"context"
 	"fmt"
-	"strings"
 
+	errs "github.com/Weit145/gateway-startup/internal/lib/e"
+	"github.com/Weit145/gateway-startup/internal/lib/valid"
+	"github.com/Weit145/gateway-startup/internal/logger"
 	"github.com/google/uuid"
 )
 
@@ -14,23 +17,28 @@ type User struct {
 	role     string
 }
 
-func New(id uuid.UUID, email string, username string, role string) (User, error) {
+func NewUser(ctx context.Context, id uuid.UUID, email string, username string, role string) (User, error) {
 	if id == uuid.Nil {
-		return User{}, fmt.Errorf("invalid user ID")
-	}
-	email = strings.TrimSpace(email)
-	if email == "" {
-		return User{}, fmt.Errorf("invalid user email")
+		return User{}, logger.WrapError(ctx, fmt.Errorf("id cannot be empty"))
 	}
 
-	username = strings.TrimSpace(username)
-	if username == "" || len(username) > 32 || len(username) < 4 {
-		return User{}, fmt.Errorf("invalid user username")
+	email, err := valid.NormalizeEmail(ctx, email)
+	if err != nil {
+		return User{}, logger.WrapError(ctx, fmt.Errorf("invalid email: %w", err))
 	}
 
-	role = strings.TrimSpace(role)
-	if role == "" {
-		return User{}, fmt.Errorf("invalid user role")
+	username, err = valid.NormalizeValue(ctx, username)
+	if err != nil {
+		return User{}, logger.WrapError(ctx, fmt.Errorf("invalid name: %w", err))
+	}
+
+	role, err = valid.NormalizeValue(ctx, role)
+	if err != nil {
+		return User{}, logger.WrapError(ctx, fmt.Errorf("invalid role: %w", err))
+	}
+
+	if role != "user" && role != "admin" {
+		return User{}, logger.WrapError(ctx, fmt.Errorf("invalid role %q: %w", role, errs.ErrInvalidInput))
 	}
 
 	return User{

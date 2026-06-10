@@ -7,7 +7,7 @@ import (
 
 	"github.com/Weit145/gateway-startup/internal/logger"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
-	mapper_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
+	router_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
 	"github.com/Weit145/gateway-startup/internal/usecase"
 )
 
@@ -27,7 +27,7 @@ func Health(ser usecase.Services) http.HandlerFunc {
 		gatewayHealth, err := ser.CheckHealthGateway(ctx)
 		if err != nil {
 			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to check health gateway", "error", err)
-			mapper_err.MapErr(w, r, err)
+			router_err.MapErr(w, r, err)
 			return
 		}
 
@@ -35,7 +35,7 @@ func Health(ser usecase.Services) http.HandlerFunc {
 		if err != nil {
 			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to check health", "error", err)
 
-			mapper_err.MapErr(w, r, err)
+			router_err.MapErr(w, r, err)
 			return
 		}
 		slog.DebugContext(ctx, "successful _health")
