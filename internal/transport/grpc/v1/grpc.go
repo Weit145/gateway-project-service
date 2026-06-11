@@ -2,8 +2,11 @@ package grpc
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	errs "github.com/Weit145/gateway-startup/internal/lib/e"
@@ -13,25 +16,37 @@ import (
 	GRPCauth "github.com/weit145/proto-startup/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 )
+
+type TLSSettings struct {
+	CertPEM    []byte
+	KeyPEM     []byte
+	ServerCA   []byte
+	ServerName string
+}
 
 type Client struct {
 	api  GRPCauth.AuthClient
 	conn *grpc.ClientConn
 }
 
-func New(addr string) (*Client, error) {
+func New(addr string, tlsSettings TLSSettings) (*Client, error) {
 	if addr == "" {
 		slog.Error("Empty address provided for gRPC client")
 		return nil, fmt.Errorf("%w", errs.ErrInternal)
 	}
 
+	transportCredentials, err := NewTLSCredentials(tlsSettings)
+	if err != nil {
+		return nil, fmt.Errorf("create auth gRPC TLS credentials: %w", err)
+	}
+
 	conn, err := grpc.NewClient(addr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+		grpc.WithTransportCredentials(transportCredentials))
 	if err != nil {
 		slog.Error("Failed to create gRPC client connection", "error", err)
-		return nil, fmt.Errorf("%w", errs.ErrInternal)
+		return nil, fmt.Errorf("create auth gRPC client: %w", err)
 	}
 
 	conn.Connect()
@@ -57,6 +72,30 @@ func New(addr string) (*Client, error) {
 		api:  grpcClient,
 		conn: conn,
 	}, nil
+}
+
+func NewTLSCredentials(settings TLSSettings) (credentials.TransportCredentials, error) {
+	certificate, err := tls.X509KeyPair(settings.CertPEM, settings.KeyPEM)
+	if err != nil {
+		return nil, fmt.Errorf("parse gRPC client certificate: %w", err)
+	}
+
+	serverCAs := x509.NewCertPool()
+	if ok := serverCAs.AppendCertsFromPEM(settings.ServerCA); !ok {
+		return nil, fmt.Errorf("parse gRPC server CA certificate")
+	}
+
+	serverName := strings.TrimSpace(settings.ServerName)
+	if serverName == "" {
+		return nil, fmt.Errorf("gRPC TLS server name is required")
+	}
+
+	return credentials.NewTLS(&tls.Config{
+		Certificates: []tls.Certificate{certificate},
+		RootCAs:      serverCAs,
+		ServerName:   serverName,
+		MinVersion:   tls.VersionTLS13,
+	}), nil
 }
 
 func (c *Client) Close() error {

@@ -26,24 +26,25 @@ func Health(ser usecase.Services) http.HandlerFunc {
 
 		gatewayHealth, err := ser.CheckHealthGateway(ctx)
 		if err != nil {
-			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to check health gateway", "error", err)
+			logCtx := logger.ErrorCtx(ctx, err)
+			slog.ErrorContext(logCtx, "failed to check health gateway", slog.Any("error", err))
 			router_err.MapErr(w, r, err)
 			return
 		}
 
 		authHealth, err := ser.CheckHealthAuth(ctx)
 		if err != nil {
-			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to check health", "error", err)
-
+			logCtx := logger.ErrorCtx(ctx, err)
+			slog.ErrorContext(logCtx, "failed to check health", slog.Any("error", err))
 			router_err.MapErr(w, r, err)
 			return
 		}
-		slog.DebugContext(ctx, "successful _health")
 
 		response := dto.NewHealthResponse(gatewayHealth, authHealth)
-
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(response)
+
+		slog.DebugContext(ctx, "successful _health")
 	}
 }

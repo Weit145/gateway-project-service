@@ -36,7 +36,7 @@ type logCtx struct {
 }
 
 func (h *HandlerMiddlware) Handle(ctx context.Context, rec slog.Record) error {
-	if c, ok := ctx.Value(key).(*logCtx); ok {
+	if c, ok := ctx.Value(key).(logCtx); ok {
 		// if c.ListID != uuid.Nil {
 		// 	rec.Add("listID", c.ListID)
 		// }
@@ -80,7 +80,7 @@ func WithLogIp(ctx context.Context, ip string) context.Context {
 		c.Ip = ip
 		return context.WithValue(ctx, key, c)
 	}
-	return context.WithValue(ctx, key, &logCtx{Ip: ip})
+	return context.WithValue(ctx, key, logCtx{Ip: ip})
 }
 
 func WithLogId(ctx context.Context, id uuid.UUID) context.Context {
@@ -88,7 +88,7 @@ func WithLogId(ctx context.Context, id uuid.UUID) context.Context {
 		c.Id = id
 		return context.WithValue(ctx, key, c)
 	}
-	return context.WithValue(ctx, key, &logCtx{Id: id})
+	return context.WithValue(ctx, key, logCtx{Id: id})
 }
 
 func WithLogJwtId(ctx context.Context, jwtId uuid.UUID) context.Context {
@@ -96,7 +96,7 @@ func WithLogJwtId(ctx context.Context, jwtId uuid.UUID) context.Context {
 		c.JwtId = jwtId
 		return context.WithValue(ctx, key, c)
 	}
-	return context.WithValue(ctx, key, &logCtx{JwtId: jwtId})
+	return context.WithValue(ctx, key, logCtx{JwtId: jwtId})
 }
 
 func WithLogEmail(ctx context.Context, email string) context.Context {
@@ -105,20 +105,20 @@ func WithLogEmail(ctx context.Context, email string) context.Context {
 	if len(email) > 5 {
 		email = email[:5] + strings.Repeat("*", len(email)-5)
 	}
-	if c, ok := ctx.Value(key).(*logCtx); ok {
+	if c, ok := ctx.Value(key).(logCtx); ok {
 		c.Email = email
 		return context.WithValue(ctx, key, c)
 	}
-	return context.WithValue(ctx, key, &logCtx{Email: email})
+	return context.WithValue(ctx, key, logCtx{Email: email})
 }
 
 func WithLogName(ctx context.Context, name string) context.Context {
 	name = strings.TrimSpace(name)
-	if c, ok := ctx.Value(key).(*logCtx); ok {
+	if c, ok := ctx.Value(key).(logCtx); ok {
 		c.Name = name
 		return context.WithValue(ctx, key, c)
 	}
-	return context.WithValue(ctx, key, &logCtx{Name: name})
+	return context.WithValue(ctx, key, logCtx{Name: name})
 }
 
 type errorWithLogCtx struct {

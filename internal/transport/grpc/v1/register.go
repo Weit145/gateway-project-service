@@ -3,7 +3,6 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/Weit145/gateway-startup/internal/domain/auth"
 	errs "github.com/Weit145/gateway-startup/internal/lib/e"
@@ -21,10 +20,8 @@ func (c *Client) Register(ctx context.Context, email string, password string, na
 	})
 	if err != nil {
 		err = mapper_err_grpc.MapErr(err)
-		slog.DebugContext(ctx, "Failed to register via gRPC", "error", err)
-		return logger.WrapError(ctx, err)
+		return logger.WrapError(ctx, fmt.Errorf("From gRPC: %w", err))
 	}
-
 	return nil
 }
 
@@ -35,8 +32,7 @@ func (c *Client) ConfirmEmail(ctx context.Context, token string, userID string) 
 	})
 	if err != nil {
 		err = mapper_err_grpc.MapErr(err)
-		slog.DebugContext(ctx, "Failed to confirm email via gRPC", "error", err)
-		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, err)
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("From gRPC: %w", err))
 	}
 
 	accessToken := resp.GetAccessToken()
@@ -55,24 +51,21 @@ func (c *Client) ConfirmEmail(ctx context.Context, token string, userID string) 
 		mapper_err_grpc.Field{Name: "role", Value: role},
 	)
 	if err != nil {
-		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, err)
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Invalid value from gRPC response: %w", err))
 	}
 
 	id, err := uuid.Parse(idString)
 	if err != nil {
-		slog.DebugContext(ctx, "Received invalid user ID from gRPC response", "error", err)
-		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal))
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Invalid user ID from gRPC response: %w", errs.ErrInternal))
 	}
 
-	user, err := auth.NewUser(ctx, id, email, username, role)
+	user, err := auth.NewUser(id, email, username, role)
 	if err != nil {
-		slog.DebugContext(ctx, "Failed to create user from gRPC response", "error", err)
-		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal))
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain user: %w", err))
 	}
-	tokens, err := auth.NewTokens(ctx, accessToken, refreshToken)
+	tokens, err := auth.NewTokens(accessToken, refreshToken)
 	if err != nil {
-		slog.DebugContext(ctx, "Failed to create tokens from gRPC response", "error", err)
-		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal))
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain tokens: %w", err))
 	}
 
 	return user, tokens, nil

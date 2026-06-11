@@ -31,29 +31,32 @@ func Register(ser usecase.Services) http.HandlerFunc {
 		var req dto.RegisterRequest
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			slog.DebugContext(ctx, "failed to decode request body", "error", err)
+			slog.DebugContext(ctx, "failed to decode request body", slog.Any("error", err))
 			router_err.DeocdeFaild(w)
 			return
 		}
 
 		if err := req.Validate(ctx); err != nil {
+			slog.DebugContext(ctx, "failed to validate request body", slog.Any("error", err))
 			router_err.MapErr(w, r, err)
 			return
 		}
 
 		ctx = logger.WithLogEmail(ctx, req.Email)
+		ctx = logger.WithLogName(ctx, req.Name)
 
 		if err := ser.Register(ctx, req.Email, req.Password, req.Name); err != nil {
-			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to register user", "error", err)
+			logCtx := logger.ErrorCtx(ctx, err)
+			slog.ErrorContext(logCtx, "failed to register user", slog.Any("error", err))
 			router_err.MapErr(w, r, err)
 			return
 		}
 
-		slog.DebugContext(ctx, "successful register")
-
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(dto.Response{Status: "ok"})
+
+		slog.DebugContext(ctx, "successful register")
 	}
 }
 
@@ -79,14 +82,13 @@ func ConfirmEmail(ser usecase.Services) http.HandlerFunc {
 		var req dto.ConfirmEmailRequest
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			slog.DebugContext(ctx, "failed to decode request body", "error", err)
-
-			w.WriteHeader(http.StatusBadRequest)
-			_ = json.NewEncoder(w).Encode(dto.Response{Status: "invalid request"})
+			slog.DebugContext(ctx, "failed to decode request body", slog.Any("error", err))
+			router_err.DeocdeFaild(w)
 			return
 		}
 
 		if err := req.Validate(ctx); err != nil {
+			slog.DebugContext(ctx, "failed to validate request body", slog.Any("error", err))
 			router_err.MapErr(w, r, err)
 			return
 		}
@@ -95,15 +97,13 @@ func ConfirmEmail(ser usecase.Services) http.HandlerFunc {
 
 		user, tokens, err := ser.ConfirmEmail(ctx, req.Token, req.UserId)
 		if err != nil {
-			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to confirm email", "error", err)
-
+			logCtx := logger.ErrorCtx(ctx, err)
+			slog.ErrorContext(logCtx, "failed to confirm email", slog.Any("error", err))
 			router_err.MapErr(w, r, err)
 			return
 		}
 
-		slog.DebugContext(ctx, "successful email confirmation")
 		resp := dto.NewRegisterResponse(user, tokens)
-
 		w.Header().Set("Content-Type", "application/json")
 		http.SetCookie(
 			w,
@@ -117,5 +117,7 @@ func ConfirmEmail(ser usecase.Services) http.HandlerFunc {
 		)
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(resp)
+
+		slog.DebugContext(ctx, "successful email confirmation")
 	}
 }

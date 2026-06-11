@@ -35,12 +35,13 @@ func Login(ser usecase.Services) http.HandlerFunc {
 		var req dto.LoginRequest
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			slog.DebugContext(ctx, "failed to decode request body", "error", err)
+			slog.DebugContext(ctx, "failed to decode request body", slog.Any("error", err))
 			router_err.DeocdeFaild(w)
 			return
 		}
 
 		if err := req.Validate(ctx); err != nil {
+			slog.DebugContext(ctx, "failed to validate request body", slog.Any("error", err))
 			router_err.MapErr(w, r, err)
 			return
 		}
@@ -48,12 +49,12 @@ func Login(ser usecase.Services) http.HandlerFunc {
 
 		user, tokens, err := ser.Login(ctx, req.Email, req.Password)
 		if err != nil {
-			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to login user", "error", err)
+			logCtx := logger.ErrorCtx(ctx, err)
+			slog.ErrorContext(logCtx, "failed to login user", slog.Any("error", err))
 			router_err.MapErr(w, r, err)
 			return
 		}
 
-		slog.DebugContext(ctx, "successful login")
 		resp := dto.NewRegisterResponse(user, tokens)
 		w.Header().Set("Content-Type", "application/json")
 		http.SetCookie(
@@ -68,6 +69,8 @@ func Login(ser usecase.Services) http.HandlerFunc {
 		)
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(resp)
+
+		slog.InfoContext(ctx, "successful login")
 	}
 }
 
@@ -89,27 +92,25 @@ func Logout(ser usecase.Services) http.HandlerFunc {
 		ctx := r.Context()
 		userID, ok := authctx.UserID(ctx)
 		if !ok {
-			slog.ErrorContext(ctx, "user ID not found in context")
+			slog.WarnContext(ctx, "user ID not found in context")
 			router_err.MapErr(w, r, errs.ErrUnauthorized)
 			return
 		}
 
 		cookie, err := r.Cookie("refresh_token")
 		if err != nil || cookie.Value == "" {
-			slog.DebugContext(ctx, "cookie not found")
+			slog.DebugContext(ctx, "cookie not found", slog.Any("error", err))
 			router_err.CookieFaild(w)
 			return
 		}
 
 		refreshToken := cookie.Value
-		err = ser.Logout(ctx, userID, refreshToken)
-		if err != nil {
-			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to Logout user", "error", err)
+		if err := ser.Logout(ctx, userID, refreshToken); err != nil {
+			logCtx := logger.ErrorCtx(ctx, err)
+			slog.ErrorContext(logCtx, "failed to Logout user", slog.Any("error", err))
 			router_err.MapErr(w, r, err)
 			return
 		}
-
-		slog.DebugContext(ctx, "successful Logout")
 
 		w.Header().Set("Content-Type", "application/json")
 		http.SetCookie(
@@ -125,5 +126,7 @@ func Logout(ser usecase.Services) http.HandlerFunc {
 		)
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(dto.Response{Status: "ok"})
+
+		slog.DebugContext(ctx, "successful Logout")
 	}
 }

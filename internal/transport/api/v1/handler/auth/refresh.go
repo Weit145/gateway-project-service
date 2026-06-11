@@ -35,17 +35,15 @@ func RefreshToken(ser usecase.Services) http.HandlerFunc {
 		}
 
 		refreshToken := cookie.Value
-
 		user, tokens, err := ser.RefreshToken(ctx, refreshToken)
 		if err != nil {
-			slog.ErrorContext(logger.ErrorCtx(ctx, err), "failed to refresh token", "error", err)
+			logCtx := logger.ErrorCtx(ctx, err)
+			slog.ErrorContext(logCtx, "failed to refresh token", slog.Any("error", err))
 			router_err.MapErr(w, r, err)
 			return
 		}
 
-		slog.DebugContext(ctx, "successful token refresh")
 		resp := dto.NewRegisterResponse(user, tokens)
-
 		w.Header().Set("Content-Type", "application/json")
 		http.SetCookie(
 			w,
@@ -59,5 +57,7 @@ func RefreshToken(ser usecase.Services) http.HandlerFunc {
 		)
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(resp)
+
+		slog.DebugContext(ctx, "successful token refresh")
 	}
 }

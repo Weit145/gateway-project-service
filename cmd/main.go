@@ -44,7 +44,12 @@ func main() {
 	defer stop()
 
 	//Init grpc client
-	grpcClient, err := grpc.New(cfg.GRPC.AuthAddr)
+	grpcClient, err := grpc.New(cfg.GRPC.AuthAddr, grpc.TLSSettings{
+		CertPEM:    cfg.GRPC.TLSCertPEM,
+		KeyPEM:     cfg.GRPC.TLSKeyPEM,
+		ServerCA:   cfg.GRPC.TLSServerCAPEM,
+		ServerName: cfg.GRPC.TLSServerName,
+	})
 	if err != nil {
 		slog.ErrorContext(logger.ErrorCtx(ctx, err), "init grpc client", "error", err)
 		return
