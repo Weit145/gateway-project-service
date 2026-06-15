@@ -6,30 +6,26 @@ import (
 
 	"github.com/Weit145/gateway-startup/internal/domain/auth"
 	"github.com/Weit145/gateway-startup/internal/domain/health"
+	errs "github.com/Weit145/gateway-startup/internal/lib/e"
 	"github.com/Weit145/gateway-startup/internal/logger"
 	"github.com/google/uuid"
 )
-
-type AuthService interface {
-	CheckHealthAuth(ctx context.Context) (*health.Health, error)
-	Register(ctx context.Context, email string, password string, name string) error
-	Login(ctx context.Context, email string, password string) (auth.User, auth.Tokens, error)
-	ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (auth.User, auth.Tokens, error)
-	Logout(ctx context.Context, userID uuid.UUID, refreshToken string) error
-	RefreshToken(ctx context.Context, refreshToken string) (auth.User, auth.Tokens, error)
-}
 
 func (s *Service) CheckHealthAuth(ctx context.Context) (*health.Health, error) {
 
 	authStatus := "success"
 	dbHealth := "success"
+	var healthErr error
+
 	authHealthy, grpcErr := s.grpcClient.CheckHealth(ctx)
 	if grpcErr != nil {
 		authStatus = "error"
 		dbHealth = "error"
-	}
-	if !authHealthy {
+		healthErr = logger.WrapError(ctx, fmt.Errorf("check auth health: %w: %w", grpcErr, errs.ErrUnavailable))
+	} else if !authHealthy {
+		authStatus = "error"
 		dbHealth = "error"
+		healthErr = logger.WrapError(ctx, fmt.Errorf("auth service reported unhealthy: %w", errs.ErrUnavailable))
 	}
 
 	authHealth, err := health.NewHealth(ctx, "auth", authStatus, &dbHealth)
@@ -37,7 +33,7 @@ func (s *Service) CheckHealthAuth(ctx context.Context) (*health.Health, error) {
 		return nil, logger.WrapError(ctx, fmt.Errorf("check health auth grpc: %w", err))
 	}
 
-	return &authHealth, nil
+	return &authHealth, healthErr
 }
 
 func (s *Service) Register(ctx context.Context, email string, password string, name string) error {
@@ -78,4 +74,16 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (auth.U
 		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("refresh token: %w", err))
 	}
 	return user, tokens, nil
+}
+
+func (s *Service) PasswordRequest(ctx context.Context, email string) error {
+	return nil
+}
+
+func (s *Service) PasswordConfirm(ctx context.Context, token string, userID uuid.UUID) error {
+	return nil
+}
+
+func (s *Service) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword string, newPassword string) error {
+	return nil
 }

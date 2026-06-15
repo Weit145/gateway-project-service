@@ -29,6 +29,10 @@ func MapErr(err error) error {
 		return errs.ErrNotFound
 	case codes.AlreadyExists:
 		return errs.ErrAlreadyExists
+	case codes.DeadlineExceeded:
+		return errs.ErrTimeout
+	case codes.Unavailable:
+		return errs.ErrUnavailable
 	default:
 		return errs.ErrInternal
 	}
@@ -38,13 +42,13 @@ func InvalidErr(ctx context.Context, fields ...Field) error {
 	for _, field := range fields {
 		if strings.TrimSpace(field.Value) == "" {
 			slog.DebugContext(ctx, "Received invalid "+field.Name+" from gRPC response")
-			return fmt.Errorf(field.Name+" is required: %w", errs.ErrInvalidInput)
+			return fmt.Errorf(field.Name+" is required: %w", errs.ErrInternal)
 		}
 		if field.Name == "email" {
 			address, err := mail.ParseAddress(field.Value)
 			if err != nil || address.Address != field.Value {
 				slog.DebugContext(ctx, "invalid email", slog.String("field", field.Name))
-				return status.Error(codes.InvalidArgument, field.Name+" must be a valid email")
+				return fmt.Errorf(field.Name+" must be a valid email: %w", errs.ErrInternal)
 			}
 		}
 	}

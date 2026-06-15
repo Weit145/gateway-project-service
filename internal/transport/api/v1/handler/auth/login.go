@@ -1,17 +1,25 @@
 package handler_auth
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 
+	"github.com/Weit145/gateway-startup/internal/domain/auth"
 	errs "github.com/Weit145/gateway-startup/internal/lib/e"
 	"github.com/Weit145/gateway-startup/internal/logger"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/authctx"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
 	router_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
-	"github.com/Weit145/gateway-startup/internal/usecase"
+	"github.com/Weit145/gateway-startup/internal/transport/api/v1/request"
+	"github.com/google/uuid"
 )
+
+type LoginService interface {
+	Login(ctx context.Context, email string, password string) (auth.User, auth.Tokens, error)
+	Logout(ctx context.Context, userID uuid.UUID, refreshToken string) error
+}
 
 // Login godoc
 // @Summary Login user
@@ -27,16 +35,15 @@ import (
 // @Failure 403 {object} dto.Response
 // @Failure 500 {object} dto.Response
 // @Router /auth/login [post]
-func Login(ser usecase.Services) http.HandlerFunc {
+func Login(ser LoginService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		ctx := r.Context()
 
 		var req dto.LoginRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		if err != nil {
+		if err := request.DecodeJSON(w, r, &req); err != nil {
 			slog.DebugContext(ctx, "failed to decode request body", slog.Any("error", err))
-			router_err.DeocdeFaild(w)
+			router_err.DecodeFailed(w, err)
 			return
 		}
 
@@ -86,7 +93,7 @@ func Login(ser usecase.Services) http.HandlerFunc {
 // @Failure 401 {object} dto.Response
 // @Failure 500 {object} dto.Response
 // @Router /auth/logout [post]
-func Logout(ser usecase.Services) http.HandlerFunc {
+func Logout(ser LoginService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		ctx := r.Context()

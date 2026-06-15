@@ -1,15 +1,20 @@
 package handler_auth
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 
+	"github.com/Weit145/gateway-startup/internal/domain/auth"
 	"github.com/Weit145/gateway-startup/internal/logger"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
 	router_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
-	"github.com/Weit145/gateway-startup/internal/usecase"
 )
+
+type RefreshService interface {
+	RefreshToken(ctx context.Context, refreshToken string) (auth.User, auth.Tokens, error)
+}
 
 // RefreshToken godoc
 // @Summary Refresh access token
@@ -23,7 +28,7 @@ import (
 // @Failure 404 {object} dto.Response
 // @Failure 500 {object} dto.Response
 // @Router /auth/refresh-token [post]
-func RefreshToken(ser usecase.Services) http.HandlerFunc {
+func RefreshToken(ser RefreshService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -55,7 +60,7 @@ func RefreshToken(ser usecase.Services) http.HandlerFunc {
 				SameSite: http.SameSiteStrictMode,
 			},
 		)
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(resp)
 
 		slog.DebugContext(ctx, "successful token refresh")

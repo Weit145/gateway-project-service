@@ -12,24 +12,31 @@ import (
 
 type Service struct {
 	grpcClient port.GRPServices
+	redis      port.RedisServices
 }
 
-type Services interface {
-	CheckHealthGateway(ctx context.Context) (*health.Health, error)
-	AuthService
-}
-
-func NewServices(grpcClient port.GRPServices) *Service {
+func NewServices(grpcClient port.GRPServices, redis port.RedisServices) *Service {
 	return &Service{
 		grpcClient: grpcClient,
+		redis:      redis,
 	}
 }
 
 func (s *Service) CheckHealthGateway(ctx context.Context) (*health.Health, error) {
-	gatewayHealth, err := health.NewHealth(ctx, "gateway", "success", nil)
+	gatewayStatus := "success"
+	redisStatus := "success"
+	var healthErr error
+
+	if err := s.redis.CheckHealth(ctx); err != nil {
+		gatewayStatus = "error"
+		redisStatus = "error"
+		healthErr = logger.WrapError(ctx, fmt.Errorf("check redis health: %w: %w", err, errs.ErrUnavailable))
+	}
+
+	gatewayHealth, err := health.NewHealth(ctx, "gateway", gatewayStatus, &redisStatus)
 	if err != nil {
 		return nil, logger.WrapError(ctx, fmt.Errorf("%w", errs.ErrInternal))
 	}
 
-	return &gatewayHealth, nil
+	return &gatewayHealth, healthErr
 }

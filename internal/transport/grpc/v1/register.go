@@ -13,7 +13,10 @@ import (
 )
 
 func (c *Client) Register(ctx context.Context, email string, password string, name string) error {
-	_, err := c.api.Register(ctx, &GRPCauth.RegisterRequest{
+	rpcCtx, cancel := c.rpcLongContext(ctx)
+	defer cancel()
+
+	_, err := c.api.Register(rpcCtx, &GRPCauth.RegisterRequest{
 		Email:    email,
 		Password: password,
 		Name:     name,
@@ -26,7 +29,10 @@ func (c *Client) Register(ctx context.Context, email string, password string, na
 }
 
 func (c *Client) ConfirmEmail(ctx context.Context, token string, userID string) (auth.User, auth.Tokens, error) {
-	resp, err := c.api.ConfirmEmail(ctx, &GRPCauth.ConfirmRequest{
+	rpcCtx, cancel := c.rpcDefaultContext(ctx)
+	defer cancel()
+
+	resp, err := c.api.ConfirmEmail(rpcCtx, &GRPCauth.ConfirmRequest{
 		Token:  token,
 		UserID: userID,
 	})

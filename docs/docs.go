@@ -32,10 +32,10 @@ const docTemplate = `{
                             "$ref": "#/definitions/dto.HealthResponse"
                         }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    "503": {
+                        "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/dto.Response"
+                            "$ref": "#/definitions/dto.HealthResponse"
                         }
                     }
                 }

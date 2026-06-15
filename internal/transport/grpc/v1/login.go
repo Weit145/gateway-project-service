@@ -14,7 +14,10 @@ import (
 )
 
 func (c *Client) Login(ctx context.Context, email string, password string) (auth.User, auth.Tokens, error) {
-	resp, err := c.api.Login(ctx, &GRPCauth.LoginRequest{
+	rpcCtx, cancel := c.rpcDefaultContext(ctx)
+	defer cancel()
+
+	resp, err := c.api.Login(rpcCtx, &GRPCauth.LoginRequest{
 		Email:    email,
 		Password: password,
 	})
@@ -61,7 +64,10 @@ func (c *Client) Login(ctx context.Context, email string, password string) (auth
 }
 
 func (c *Client) Logout(ctx context.Context, userID string, refreshToken string) error {
-	_, err := c.api.Logout(ctx, &GRPCauth.LogOutRequest{
+	rpcCtx, cancel := c.rpcDefaultContext(ctx)
+	defer cancel()
+
+	_, err := c.api.Logout(rpcCtx, &GRPCauth.LogOutRequest{
 		UserID:       userID,
 		RefreshToken: refreshToken,
 	})

@@ -14,7 +14,10 @@ import (
 )
 
 func (c *Client) RefreshToken(ctx context.Context, refreshToken string) (auth.User, auth.Tokens, error) {
-	resp, err := c.api.RefreshToken(ctx, &GRPCauth.RefreshRequest{
+	rpcCtx, cancel := c.rpcDefaultContext(ctx)
+	defer cancel()
+
+	resp, err := c.api.RefreshToken(rpcCtx, &GRPCauth.RefreshRequest{
 		RefreshToken: refreshToken,
 	})
 	if err != nil {

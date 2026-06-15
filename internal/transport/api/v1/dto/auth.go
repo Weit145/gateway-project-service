@@ -65,7 +65,6 @@ func (r *ConfirmEmailRequest) Validate(ctx context.Context) error {
 func (r *RegisterRequest) Validate(ctx context.Context) error {
 	r.Name = strings.TrimSpace(r.Name)
 	r.Email = strings.TrimSpace(r.Email)
-	r.Password = strings.TrimSpace(r.Password)
 
 	if len(r.Name) < 4 || len(r.Name) > 32 {
 		slog.DebugContext(ctx, "Validation failed Name")
@@ -92,7 +91,6 @@ type LoginRequest struct {
 
 func (r *LoginRequest) Validate(ctx context.Context) error {
 	r.Email = strings.TrimSpace(r.Email)
-	r.Password = strings.TrimSpace(r.Password)
 
 	if len(r.Email) < 4 || len(r.Email) > 32 || !strings.Contains(r.Email, "@") {
 		slog.DebugContext(ctx, "Validation failed Email")
@@ -108,4 +106,66 @@ func (r *LoginRequest) Validate(ctx context.Context) error {
 }
 
 type LogoutRequest struct {
+}
+
+type PasswordRequest struct {
+	Email string `json:"email" validate:"required,email,min=4,max=32"`
+}
+
+func (r *PasswordRequest) Validate(ctx context.Context) error {
+	r.Email = strings.TrimSpace(r.Email)
+
+	if len(r.Email) < 4 || len(r.Email) > 32 || !strings.Contains(r.Email, "@") {
+		slog.DebugContext(ctx, "Validation failed Email")
+		return logger.WrapError(ctx, errs.ErrInvalidInput)
+	}
+
+	return nil
+}
+
+type PasswordConfirmRequest struct {
+	Token    string    `json:"token" validate:"required"`
+	UserId   uuid.UUID `json:"userId" validate:"required"`
+	Password string    `json:"password" validate:"required,min=6,max=32"`
+}
+
+func (r *PasswordConfirmRequest) Validate(ctx context.Context) error {
+	r.Token = strings.TrimSpace(r.Token)
+
+	if r.Token == "" {
+		slog.DebugContext(ctx, "Validation failed Token")
+		return logger.WrapError(ctx, errs.ErrInvalidInput)
+	}
+
+	if r.UserId == uuid.Nil {
+		slog.DebugContext(ctx, "Validation failed UserId")
+		return logger.WrapError(ctx, errs.ErrInvalidInput)
+	}
+
+	if len(r.Password) < 6 || len(r.Password) > 32 {
+		slog.DebugContext(ctx, "Validation failed Password")
+		return logger.WrapError(ctx, errs.ErrInvalidInput)
+	}
+
+	return nil
+}
+
+type ChagePasswordRequest struct {
+	OldPassword string `json:"old_password" validate:"required,min=6,max=32"`
+	NewPassword string `json:"new_password" validate:"required,min=6,max=32"`
+}
+
+func (r *ChagePasswordRequest) Validate(ctx context.Context) error {
+
+	if len(r.OldPassword) < 6 || len(r.OldPassword) > 32 {
+		slog.DebugContext(ctx, "Validation failed old Password")
+		return logger.WrapError(ctx, errs.ErrInvalidInput)
+	}
+
+	if len(r.NewPassword) < 6 || len(r.NewPassword) > 32 {
+		slog.DebugContext(ctx, "Validation failed new Password")
+		return logger.WrapError(ctx, errs.ErrInvalidInput)
+	}
+
+	return nil
 }
