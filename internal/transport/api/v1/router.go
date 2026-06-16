@@ -18,6 +18,8 @@ type Services interface {
 	handler_auth.PasswordService
 	handler_auth.RefreshService
 	handler_auth.RegisterService
+	middleware.LoginService
+	middleware.RateLimitService
 }
 
 type Repository interface {
@@ -33,15 +35,15 @@ func NewRouter(ser Services, rd Repository, trustedProxies []netip.Prefix, jwtPu
 	r.HandleFunc("/_health", handler.Health(ser)).Methods(http.MethodGet)
 
 	auth := r.PathPrefix("/auth").Subrouter()
-	auth.Use(middleware.CheckIPRateLimit(rd, trustedProxies))
-	auth.HandleFunc("/register", handler_auth.Register(ser, rd)).Methods(http.MethodPost)
+	auth.Use(middleware.CheckIPRateLimit(ser, trustedProxies))
+	auth.HandleFunc("/register", handler_auth.Register(ser)).Methods(http.MethodPost)
 	auth.HandleFunc("/confirm-email", handler_auth.ConfirmEmail(ser)).Methods(http.MethodPost)
 
 	auth.HandleFunc("/login", handler_auth.Login(ser)).Methods(http.MethodPost)
 	auth.Handle(
 		"/logout",
-		middleware.CheckLogin(jwtPublicKey)(
-			middleware.CheckUserRateLimit(rd)(handler_auth.Logout(ser)),
+		middleware.CheckLogin(ser)(
+			middleware.CheckUserRateLimit(ser)(handler_auth.Logout(ser)),
 		),
 	).Methods(http.MethodPost)
 
@@ -49,16 +51,16 @@ func NewRouter(ser Services, rd Repository, trustedProxies []netip.Prefix, jwtPu
 
 	auth.Handle(
 		"/change-password",
-		middleware.CheckLogin(jwtPublicKey)(
-			middleware.CheckUserRateLimit(rd)(
+		middleware.CheckLogin(ser)(
+			middleware.CheckUserRateLimit(ser)(
 				handler_auth.ChangePassword(ser),
 			),
 		),
 	).Methods(http.MethodPost)
 
 	password := auth.PathPrefix("/password-reset").Subrouter()
-	password.HandleFunc("/request", handler_auth.PasswordRequest(ser, rd)).Methods(http.MethodPost)
-	auth.Handle("/confirm", handler_auth.PasswordConfirm(ser)).Methods(http.MethodPost)
+	password.HandleFunc("/request", handler_auth.PasswordRequest(ser)).Methods(http.MethodPost)
+	password.Handle("/confirm", handler_auth.PasswordConfirm(ser)).Methods(http.MethodPost)
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	return r

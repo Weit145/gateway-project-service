@@ -15,8 +15,18 @@ type accessClaims struct {
 	gojwt.RegisteredClaims
 }
 
-func CheckToken(authHeader string, publicKey *rsa.PublicKey) (uuid.UUID, uuid.UUID, error) {
-	if publicKey == nil {
+type JWTService struct {
+	publicKey *rsa.PublicKey
+}
+
+func NewJWTService(publicKey *rsa.PublicKey) *JWTService {
+	return &JWTService{
+		publicKey: publicKey,
+	}
+}
+
+func (j *JWTService) CheckToken(authHeader string) (uuid.UUID, uuid.UUID, error) {
+	if j.publicKey == nil {
 		return uuid.Nil, uuid.Nil, fmt.Errorf("JWT public key is not configured: %w", errs.ErrInternal)
 	}
 
@@ -31,7 +41,7 @@ func CheckToken(authHeader string, publicKey *rsa.PublicKey) (uuid.UUID, uuid.UU
 		strings.TrimSpace(tokenString),
 		claims,
 		func(token *gojwt.Token) (interface{}, error) {
-			return publicKey, nil
+			return j.publicKey, nil
 		},
 		gojwt.WithValidMethods([]string{gojwt.SigningMethodRS256.Alg()}),
 		gojwt.WithIssuer("auth-service"),

@@ -37,10 +37,31 @@ func (s *Service) CheckHealthAuth(ctx context.Context) (*health.Health, error) {
 }
 
 func (s *Service) Register(ctx context.Context, email string, password string, name string) error {
+	if err := s.redis.LimiterEmail(ctx, email); err != nil {
+		return logger.WrapError(ctx, fmt.Errorf("rate limit email: %w", err))
+	}
 	if err := s.grpcClient.Register(ctx, email, password, name); err != nil {
 		return logger.WrapError(ctx, fmt.Errorf("register user: %w", err))
 	}
 	return nil
+}
+
+func (s *Service) RepeatEmail(ctx context.Context, email string) error {
+	if err := s.redis.LimiterEmail(ctx, email); err != nil {
+		return logger.WrapError(ctx, fmt.Errorf("rate limit email: %w", err))
+	}
+	if err := s.grpcClient.RepeatEmail(ctx, email); err != nil {
+		return logger.WrapError(ctx, fmt.Errorf("reepat email register: %w", err))
+	}
+	return nil
+}
+
+func (s *Service) ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (auth.User, auth.Tokens, error) {
+	user, tokens, err := s.grpcClient.ConfirmEmail(ctx, token, userID.String())
+	if err != nil {
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("confirm email: %w", err))
+	}
+	return user, tokens, nil
 }
 
 func (s *Service) Login(ctx context.Context, email string, password string) (auth.User, auth.Tokens, error) {
@@ -49,14 +70,6 @@ func (s *Service) Login(ctx context.Context, email string, password string) (aut
 		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("login user: %w", err))
 	}
 
-	return user, tokens, nil
-}
-
-func (s *Service) ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (auth.User, auth.Tokens, error) {
-	user, tokens, err := s.grpcClient.ConfirmEmail(ctx, token, userID.String())
-	if err != nil {
-		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("confirm email: %w", err))
-	}
 	return user, tokens, nil
 }
 
@@ -77,13 +90,25 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (auth.U
 }
 
 func (s *Service) PasswordRequest(ctx context.Context, email string) error {
+	if err := s.redis.LimiterEmail(ctx, email); err != nil {
+		return logger.WrapError(ctx, fmt.Errorf("rate limit email: %w", err))
+	}
+	if err := s.grpcClient.PasswordRequest(ctx, email); err != nil {
+		return logger.WrapError(ctx, fmt.Errorf("password email request: %w", err))
+	}
 	return nil
 }
 
-func (s *Service) PasswordConfirm(ctx context.Context, token string, userID uuid.UUID) error {
+func (s *Service) PasswordConfirm(ctx context.Context, token string, userID uuid.UUID, newPassword string) error {
+	if err := s.grpcClient.PasswordConfirm(ctx, token, userID, newPassword); err != nil {
+		return logger.WrapError(ctx, fmt.Errorf("password confirm: %w", err))
+	}
 	return nil
 }
 
 func (s *Service) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword string, newPassword string) error {
+	if err := s.grpcClient.ChangePassword(ctx, userID, oldPassword, newPassword); err != nil {
+		return logger.WrapError(ctx, fmt.Errorf("change password: %w", err))
+	}
 	return nil
 }

@@ -28,6 +28,17 @@ func (c *Client) Register(ctx context.Context, email string, password string, na
 	return nil
 }
 
+func (c *Client) RepeatEmail(ctx context.Context, email string) error {
+	rpcCtx, cancel := c.rpcDefaultContext(ctx)
+	defer cancel()
+
+	if _, err := c.api.RepeatEmail(rpcCtx, &GRPCauth.Email{Email: email}); err != nil {
+		err = mapper_err_grpc.MapErr(err)
+		return logger.WrapError(ctx, fmt.Errorf("From gRPC: %w", err))
+	}
+	return nil
+}
+
 func (c *Client) ConfirmEmail(ctx context.Context, token string, userID string) (auth.User, auth.Tokens, error) {
 	rpcCtx, cancel := c.rpcDefaultContext(ctx)
 	defer cancel()

@@ -16,6 +16,8 @@ type RateLimiter interface {
 	LimiterUserID(ctx context.Context, userID uuid.UUID) error
 }
 
+type AuthHandlerFunc func(http.ResponseWriter, *http.Request, uuid.UUID)
+
 func Recovery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {

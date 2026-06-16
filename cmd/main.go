@@ -13,6 +13,7 @@ import (
 
 	_ "github.com/Weit145/gateway-startup/docs"
 	"github.com/Weit145/gateway-startup/internal/config"
+	"github.com/Weit145/gateway-startup/internal/jwt"
 	"github.com/Weit145/gateway-startup/internal/logger"
 	my_redis "github.com/Weit145/gateway-startup/internal/repositories/storage/redis"
 	v1 "github.com/Weit145/gateway-startup/internal/transport/api/v1"
@@ -81,8 +82,12 @@ func run() error {
 	slog.Info("Init redis")
 	defer redis.Close()
 
+	//Init jwt
+	jwtSer := jwt.NewJWTService(cfg.JWT.PublicKey)
+	slog.Info("Init jwt")
+
 	//Init usecase
-	ser := usecase.NewServices(grpcClient, redis)
+	ser := usecase.NewServices(grpcClient, redis, jwtSer)
 	slog.Info("Init usecase")
 
 	//Init api

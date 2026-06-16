@@ -7,11 +7,10 @@ import (
 	"net/http"
 
 	"github.com/Weit145/gateway-startup/internal/domain/auth"
-	errs "github.com/Weit145/gateway-startup/internal/lib/e"
 	"github.com/Weit145/gateway-startup/internal/logger"
-	"github.com/Weit145/gateway-startup/internal/transport/api/v1/authctx"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
 	router_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
+	"github.com/Weit145/gateway-startup/internal/transport/api/v1/middleware"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/request"
 	"github.com/google/uuid"
 )
@@ -93,16 +92,10 @@ func Login(ser LoginService) http.HandlerFunc {
 // @Failure 401 {object} dto.Response
 // @Failure 500 {object} dto.Response
 // @Router /auth/logout [post]
-func Logout(ser LoginService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func Logout(ser LoginService) middleware.AuthHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request, userID uuid.UUID) {
 
 		ctx := r.Context()
-		userID, ok := authctx.UserID(ctx)
-		if !ok {
-			slog.WarnContext(ctx, "user ID not found in context")
-			router_err.MapErr(w, r, errs.ErrUnauthorized)
-			return
-		}
 
 		cookie, err := r.Cookie("refresh_token")
 		if err != nil || cookie.Value == "" {

@@ -1,5 +1,19 @@
 basePath: /
 definitions:
+  dto.ChagePasswordRequest:
+    properties:
+      new_password:
+        maxLength: 32
+        minLength: 6
+        type: string
+      old_password:
+        maxLength: 32
+        minLength: 6
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
   dto.ConfirmEmailRequest:
     properties:
       token:
@@ -39,6 +53,30 @@ definitions:
     required:
     - email
     - password
+    type: object
+  dto.PasswordConfirmRequest:
+    properties:
+      password:
+        maxLength: 32
+        minLength: 6
+        type: string
+      token:
+        type: string
+      userId:
+        type: string
+    required:
+    - password
+    - token
+    - userId
+    type: object
+  dto.PasswordRequest:
+    properties:
+      email:
+        maxLength: 32
+        minLength: 4
+        type: string
+    required:
+    - email
     type: object
   dto.RegisterRequest:
     properties:
@@ -108,6 +146,51 @@ paths:
       summary: Check health
       tags:
       - health
+  /auth/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Changes the current user's password. Requires "Bearer <access_token>"
+        in Authorization.
+      parameters:
+      - description: Change password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChagePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - BearerAuth: []
+      summary: Change password
+      tags:
+      - auth
   /auth/confirm-email:
     post:
       consumes:
@@ -228,6 +311,82 @@ paths:
       security:
       - BearerAuth: []
       summary: Logout user
+      tags:
+      - auth
+  /auth/password-reset/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirms a password reset by token and sets a new password.
+      parameters:
+      - description: Password reset confirmation
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PasswordConfirmRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      summary: Confirm password reset
+      tags:
+      - auth
+  /auth/password-reset/request:
+    post:
+      consumes:
+      - application/json
+      description: Sends a password reset request to the user's email.
+      parameters:
+      - description: Password reset request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      summary: Request password reset
       tags:
       - auth
   /auth/refresh-token:

@@ -16,6 +16,7 @@ import (
 
 type RegisterService interface {
 	Register(ctx context.Context, email string, password string, name string) error
+	RepeatEmail(ctx context.Context, email string) error
 	ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (auth.User, auth.Tokens, error)
 }
 
@@ -35,7 +36,7 @@ type RateLimiter interface {
 // @Failure 409 {object} dto.Response
 // @Failure 500 {object} dto.Response
 // @Router /auth/register [post]
-func Register(ser RegisterService, rd RateLimiter) http.HandlerFunc {
+func Register(ser RegisterService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		ctx := r.Context()
@@ -57,12 +58,6 @@ func Register(ser RegisterService, rd RateLimiter) http.HandlerFunc {
 		ctx = logger.WithLogEmail(ctx, req.Email)
 		ctx = logger.WithLogName(ctx, req.Name)
 
-		if err := rd.LimiterEmail(ctx, req.Email); err != nil {
-			slog.DebugContext(ctx, "rate limit email", slog.Any("error", err))
-			router_err.MapErr(w, r, err)
-			return
-		}
-
 		if err := ser.Register(ctx, req.Email, req.Password, req.Name); err != nil {
 			logCtx := logger.ErrorCtx(ctx, err)
 			slog.ErrorContext(logCtx, "failed to register user", slog.Any("error", err))
@@ -75,6 +70,41 @@ func Register(ser RegisterService, rd RateLimiter) http.HandlerFunc {
 		_ = json.NewEncoder(w).Encode(dto.Response{Status: "ok"})
 
 		slog.DebugContext(ctx, "successful register")
+	}
+}
+
+func RepeatEmail(ser RegisterService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		var req dto.RepeatEmailRequest
+
+		if err := request.DecodeJSON(w, r, &req); err != nil {
+			slog.DebugContext(ctx, "failed to decode request body", slog.Any("error", err))
+			router_err.DecodeFailed(w, err)
+			return
+		}
+
+		if err := req.Validate(ctx); err != nil {
+			slog.DebugContext(ctx, "failed to validate request body", slog.Any("error", err))
+			router_err.MapErr(w, r, err)
+			return
+		}
+
+		ctx = logger.WithLogEmail(ctx, req.Email)
+
+		if err := ser.RepeatEmail(ctx, req.Email); err != nil {
+			logCtx := logger.ErrorCtx(ctx, err)
+			slog.ErrorContext(logCtx, "failed to repeat email", slog.Any("error", err))
+			router_err.MapErr(w, r, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(dto.Response{Status: "ok"})
+
+		slog.DebugContext(ctx, "successful repeat email")
 	}
 }
 

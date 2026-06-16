@@ -7,6 +7,7 @@ import (
 
 	"github.com/Weit145/gateway-startup/internal/domain/auth"
 	errs "github.com/Weit145/gateway-startup/internal/lib/e"
+	"github.com/google/uuid"
 )
 
 type healthGRPCStub struct {
@@ -46,8 +47,26 @@ func (s healthRedisStub) CheckHealth(context.Context) error {
 	return s.err
 }
 
+func (healthRedisStub) LimiterIP(context.Context, string) error {
+	return nil
+}
+
+func (healthRedisStub) LimiterUserID(context.Context, uuid.UUID) error {
+	return nil
+}
+
+func (healthRedisStub) LimiterEmail(context.Context, string) error {
+	return nil
+}
+
+type healthJWTStub struct{}
+
+func (healthJWTStub) CheckToken(string) (uuid.UUID, uuid.UUID, error) {
+	return uuid.Nil, uuid.Nil, nil
+}
+
 func TestCheckHealthGatewayReportsRedisFailure(t *testing.T) {
-	service := NewServices(healthGRPCStub{healthy: true}, healthRedisStub{err: errors.New("redis unavailable")})
+	service := NewServices(healthGRPCStub{healthy: true}, healthRedisStub{err: errors.New("redis unavailable")}, healthJWTStub{})
 
 	got, err := service.CheckHealthGateway(context.Background())
 
@@ -73,7 +92,7 @@ func TestCheckHealthAuthReportsDependencyFailure(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service := NewServices(tt.grpc, healthRedisStub{})
+			service := NewServices(tt.grpc, healthRedisStub{}, healthJWTStub{})
 
 			got, err := service.CheckHealthAuth(context.Background())
 

@@ -169,3 +169,18 @@ func (r *ChagePasswordRequest) Validate(ctx context.Context) error {
 
 	return nil
 }
+
+type RepeatEmailRequest struct {
+	Email string `json:"email" validate:"required,email,min=4,max=32"`
+}
+
+func (r *RepeatEmailRequest) Validate(ctx context.Context) error {
+	r.Email = strings.TrimSpace(r.Email)
+
+	if len(r.Email) < 4 || len(r.Email) > 32 || !strings.Contains(r.Email, "@") {
+		slog.DebugContext(ctx, "Validation failed Email")
+		return logger.WrapError(ctx, errs.ErrInvalidInput)
+	}
+
+	return nil
+}

@@ -13,12 +13,14 @@ import (
 type Service struct {
 	grpcClient port.GRPServices
 	redis      port.RedisServices
+	jwt        port.JWTServices
 }
 
-func NewServices(grpcClient port.GRPServices, redis port.RedisServices) *Service {
+func NewServices(grpcClient port.GRPServices, redis port.RedisServices, jwt port.JWTServices) *Service {
 	return &Service{
 		grpcClient: grpcClient,
 		redis:      redis,
+		jwt:        jwt,
 	}
 }
 

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -8,11 +9,16 @@ import (
 	"strings"
 
 	errs "github.com/Weit145/gateway-startup/internal/lib/e"
-	"github.com/Weit145/gateway-startup/internal/transport/api/v1/authctx"
 	router_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
+	"github.com/google/uuid"
 )
 
-func CheckIPRateLimit(rd RateLimiter, trustedProxies []netip.Prefix) func(http.Handler) http.Handler {
+type RateLimitService interface {
+	CheckIPRateLimit(ctx context.Context, ip string) error
+	CheckUserRateLimit(ctx context.Context, userID uuid.UUID) error
+}
+
+func CheckIPRateLimit(ser RateLimitService, trustedProxies []netip.Prefix) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -24,7 +30,7 @@ func CheckIPRateLimit(rd RateLimiter, trustedProxies []netip.Prefix) func(http.H
 				return
 			}
 
-			if err = rd.LimiterIP(ctx, ip); err != nil {
+			if err = ser.CheckIPRateLimit(ctx, ip); err != nil {
 				slog.DebugContext(ctx, "rate limit", slog.Any("error", err))
 				router_err.MapErr(w, r, err)
 				return
@@ -35,24 +41,23 @@ func CheckIPRateLimit(rd RateLimiter, trustedProxies []netip.Prefix) func(http.H
 	}
 }
 
-func CheckUserRateLimit(rd RateLimiter) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func CheckUserRateLimit(ser RateLimitService) func(AuthHandlerFunc) AuthHandlerFunc {
+	return func(next AuthHandlerFunc) AuthHandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request, userID uuid.UUID) {
 			ctx := r.Context()
-			userID, ok := authctx.UserID(ctx)
-			if !ok {
+			if userID == uuid.Nil {
 				router_err.MapErr(w, r, errs.ErrUnauthorized)
 				return
 			}
 
-			if err := rd.LimiterUserID(ctx, userID); err != nil {
+			if err := ser.CheckUserRateLimit(ctx, userID); err != nil {
 				slog.DebugContext(ctx, "rate limit", slog.Any("error", err))
 				router_err.MapErr(w, r, err)
 				return
 			}
 
-			next.ServeHTTP(w, r)
-		})
+			next(w, r, userID)
+		}
 	}
 }
 
