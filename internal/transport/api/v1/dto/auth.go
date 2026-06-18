@@ -150,12 +150,12 @@ func (r *PasswordConfirmRequest) Validate(ctx context.Context) error {
 	return nil
 }
 
-type ChagePasswordRequest struct {
+type ChangePasswordRequest struct {
 	OldPassword string `json:"old_password" validate:"required,min=6,max=32"`
 	NewPassword string `json:"new_password" validate:"required,min=6,max=32"`
 }
 
-func (r *ChagePasswordRequest) Validate(ctx context.Context) error {
+func (r *ChangePasswordRequest) Validate(ctx context.Context) error {
 
 	if len(r.OldPassword) < 6 || len(r.OldPassword) > 32 {
 		slog.DebugContext(ctx, "Validation failed old Password")

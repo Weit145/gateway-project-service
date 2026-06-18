@@ -123,7 +123,7 @@ func PasswordConfirm(ser PasswordService) http.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param request body dto.ChagePasswordRequest true "Change password request"
+// @Param request body dto.ChangePasswordRequest true "Change password request"
 // @Success 200 {object} dto.Response
 // @Failure 400 {object} dto.Response
 // @Failure 401 {object} dto.Response
@@ -135,7 +135,7 @@ func ChangePassword(ser PasswordService) middleware.AuthHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, userID uuid.UUID) {
 		ctx := r.Context()
 
-		var req dto.ChagePasswordRequest
+		var req dto.ChangePasswordRequest
 
 		if err := request.DecodeJSON(w, r, &req); err != nil {
 			slog.DebugContext(ctx, "failed to decode request body", slog.Any("error", err))

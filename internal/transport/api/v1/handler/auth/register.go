@@ -73,6 +73,19 @@ func Register(ser RegisterService) http.HandlerFunc {
 	}
 }
 
+// RepeatEmail godoc
+// @Summary Repeat email verification
+// @Description Sends a new email verification token to an existing unverified user.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dto.RepeatEmailRequest true "Repeat email verification request"
+// @Success 200 {object} dto.Response
+// @Failure 400 {object} dto.Response
+// @Failure 404 {object} dto.Response
+// @Failure 429 {object} dto.Response
+// @Failure 500 {object} dto.Response
+// @Router /auth/repeat-email [post]
 func RepeatEmail(ser RegisterService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

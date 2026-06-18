@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  dto.ChagePasswordRequest:
+  dto.ChangePasswordRequest:
     properties:
       new_password:
         maxLength: 32
@@ -104,6 +104,15 @@ definitions:
       user:
         $ref: '#/definitions/dto.User'
     type: object
+  dto.RepeatEmailRequest:
+    properties:
+      email:
+        maxLength: 32
+        minLength: 4
+        type: string
+    required:
+    - email
+    type: object
   dto.Response:
     properties:
       error:
@@ -158,7 +167,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.ChagePasswordRequest'
+          $ref: '#/definitions/dto.ChangePasswordRequest'
       produces:
       - application/json
       responses:
@@ -457,6 +466,45 @@ paths:
           schema:
             $ref: '#/definitions/dto.Response'
       summary: Register user
+      tags:
+      - auth
+  /auth/repeat-email:
+    post:
+      consumes:
+      - application/json
+      description: Sends a new email verification token to an existing unverified
+        user.
+      parameters:
+      - description: Repeat email verification request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RepeatEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.Response'
+      summary: Repeat email verification
       tags:
       - auth
 securityDefinitions:

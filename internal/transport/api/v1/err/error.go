@@ -49,6 +49,6 @@ func DecodeFailed(w http.ResponseWriter, err error) {
 }
 
 func CookieFaild(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusBadRequest)
-	_ = json.NewEncoder(w).Encode(dto.Response{Status: "refresh token is required"})
+	w.WriteHeader(http.StatusUnauthorized)
+	_ = json.NewEncoder(w).Encode(dto.Response{Status: "error unauthorized"})
 }

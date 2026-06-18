@@ -23,6 +23,10 @@ func (healthGRPCStub) Register(context.Context, string, string, string) error {
 	return nil
 }
 
+func (healthGRPCStub) RepeatEmail(context.Context, string) error {
+	return nil
+}
+
 func (healthGRPCStub) Login(context.Context, string, string) (auth.User, auth.Tokens, error) {
 	return auth.User{}, auth.Tokens{}, nil
 }
@@ -37,6 +41,18 @@ func (healthGRPCStub) Logout(context.Context, string, string) error {
 
 func (healthGRPCStub) RefreshToken(context.Context, string) (auth.User, auth.Tokens, error) {
 	return auth.User{}, auth.Tokens{}, nil
+}
+
+func (healthGRPCStub) PasswordRequest(context.Context, string) error {
+	return nil
+}
+
+func (healthGRPCStub) PasswordConfirm(context.Context, string, uuid.UUID, string) error {
+	return nil
+}
+
+func (healthGRPCStub) ChangePassword(context.Context, uuid.UUID, string, string) error {
+	return nil
 }
 
 type healthRedisStub struct {
