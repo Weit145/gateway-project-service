@@ -19,9 +19,37 @@ type User struct {
 }
 
 type RegisterRequest struct {
-	Name     string `json:"name" validate:"required,min=4,max=32"`
-	Email    string `json:"email" validate:"required,email,min=4,max=32"`
-	Password string `json:"password" validate:"required,min=6,max=32"`
+	Token    string    `json:"token" validate:"required"`
+	UserId   uuid.UUID `json:"userId" validate:"required"`
+	Name     string    `json:"name" validate:"required,min=4,max=32"`
+	Password string    `json:"password" validate:"required,min=6,max=32"`
+}
+
+func (r *RegisterRequest) Validate(ctx context.Context) error {
+	r.Token = strings.TrimSpace(r.Token)
+	r.Name = strings.TrimSpace(r.Name)
+
+	if r.Token == "" {
+		slog.DebugContext(ctx, "Validation failed Token")
+		return logger.WrapError(ctx, errs.ErrInvalidInput)
+	}
+
+	if r.UserId == uuid.Nil {
+		slog.DebugContext(ctx, "Validation failed UserId")
+		return logger.WrapError(ctx, errs.ErrInvalidInput)
+	}
+
+	if len(r.Name) < 4 || len(r.Name) > 32 {
+		slog.DebugContext(ctx, "Validation failed Name")
+		return logger.WrapError(ctx, errs.ErrInvalidInput)
+	}
+
+	if len(r.Password) < 6 || len(r.Password) > 32 {
+		slog.DebugContext(ctx, "Validation failed Password")
+		return logger.WrapError(ctx, errs.ErrInvalidInput)
+	}
+
+	return nil
 }
 
 type RegisterResponse struct {
@@ -42,42 +70,15 @@ func NewRegisterResponse(user auth.User, tokens auth.Tokens) RegisterResponse {
 }
 
 type ConfirmEmailRequest struct {
-	Token  string    `json:"token" validate:"required"`
-	UserId uuid.UUID `json:"userId" validate:"required"`
+	Email string `json:"email" validate:"required,email,min=4,max=32"`
 }
 
 func (r *ConfirmEmailRequest) Validate(ctx context.Context) error {
-	r.Token = strings.TrimSpace(r.Token)
 
-	if r.Token == "" {
-		slog.DebugContext(ctx, "Validation failed Token")
-		return logger.WrapError(ctx, errs.ErrInvalidInput)
-	}
-
-	if r.UserId == uuid.Nil {
-		slog.DebugContext(ctx, "Validation failed UserId")
-		return logger.WrapError(ctx, errs.ErrInvalidInput)
-	}
-
-	return nil
-}
-
-func (r *RegisterRequest) Validate(ctx context.Context) error {
-	r.Name = strings.TrimSpace(r.Name)
 	r.Email = strings.TrimSpace(r.Email)
-
-	if len(r.Name) < 4 || len(r.Name) > 32 {
-		slog.DebugContext(ctx, "Validation failed Name")
-		return logger.WrapError(ctx, errs.ErrInvalidInput)
-	}
 
 	if len(r.Email) < 4 || len(r.Email) > 32 || !strings.Contains(r.Email, "@") {
 		slog.DebugContext(ctx, "Validation failed Email")
-		return logger.WrapError(ctx, errs.ErrInvalidInput)
-	}
-
-	if len(r.Password) < 6 || len(r.Password) > 32 {
-		slog.DebugContext(ctx, "Validation failed Password")
 		return logger.WrapError(ctx, errs.ErrInvalidInput)
 	}
 

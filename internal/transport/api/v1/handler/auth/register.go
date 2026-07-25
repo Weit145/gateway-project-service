@@ -15,9 +15,9 @@ import (
 )
 
 type RegisterService interface {
-	Register(ctx context.Context, email string, password string, name string) error
+	Register(ctx context.Context, userID uuid.UUID, token, name, password string) (auth.User, auth.Tokens, error)
 	RepeatEmail(ctx context.Context, email string) error
-	ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (auth.User, auth.Tokens, error)
+	ConfirmEmail(ctx context.Context, email string) error
 }
 
 type RateLimiter interface {
@@ -55,19 +55,31 @@ func Register(ser RegisterService) http.HandlerFunc {
 			return
 		}
 
-		ctx = logger.WithLogEmail(ctx, req.Email)
+		ctx = logger.WithLogId(ctx, req.UserId)
 		ctx = logger.WithLogName(ctx, req.Name)
 
-		if err := ser.Register(ctx, req.Email, req.Password, req.Name); err != nil {
+		user, tokens, err := ser.Register(ctx, req.UserId, req.Token, req.Name, req.Password)
+		if err != nil {
 			logCtx := logger.ErrorCtx(ctx, err)
 			slog.ErrorContext(logCtx, "failed to register user", slog.Any("error", err))
 			router_err.MapErr(w, r, err)
 			return
 		}
 
+		resp := dto.NewRegisterResponse(user, tokens)
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(dto.Response{Status: "ok"})
+		http.SetCookie(
+			w,
+			&http.Cookie{
+				Name:     "refresh_token",
+				Value:    tokens.RefreshToken(),
+				HttpOnly: true,
+				Secure:   true,
+				SameSite: http.SameSiteStrictMode,
+			},
+		)
+		w.WriteHeader(http.StatusCreated)
+		_ = json.NewEncoder(w).Encode(resp)
 
 		slog.DebugContext(ctx, "successful register")
 	}
@@ -153,9 +165,9 @@ func ConfirmEmail(ser RegisterService) http.HandlerFunc {
 			return
 		}
 
-		ctx = logger.WithLogId(ctx, req.UserId)
+		ctx = logger.WithLogEmail(ctx, req.Email)
 
-		user, tokens, err := ser.ConfirmEmail(ctx, req.Token, req.UserId)
+		err := ser.ConfirmEmail(ctx, req.Email)
 		if err != nil {
 			logCtx := logger.ErrorCtx(ctx, err)
 			slog.ErrorContext(logCtx, "failed to confirm email", slog.Any("error", err))
@@ -163,20 +175,9 @@ func ConfirmEmail(ser RegisterService) http.HandlerFunc {
 			return
 		}
 
-		resp := dto.NewRegisterResponse(user, tokens)
 		w.Header().Set("Content-Type", "application/json")
-		http.SetCookie(
-			w,
-			&http.Cookie{
-				Name:     "refresh_token",
-				Value:    tokens.RefreshToken(),
-				HttpOnly: true,
-				Secure:   true,
-				SameSite: http.SameSiteStrictMode,
-			},
-		)
-		w.WriteHeader(http.StatusCreated)
-		_ = json.NewEncoder(w).Encode(resp)
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(dto.Response{Status: "ok"})
 
 		slog.DebugContext(ctx, "successful email confirmation")
 	}

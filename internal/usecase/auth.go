@@ -36,14 +36,12 @@ func (s *Service) CheckHealthAuth(ctx context.Context) (*health.Health, error) {
 	return &authHealth, healthErr
 }
 
-func (s *Service) Register(ctx context.Context, email string, password string, name string) error {
-	if err := s.redis.LimiterEmail(ctx, email); err != nil {
-		return logger.WrapError(ctx, fmt.Errorf("rate limit email: %w", err))
+func (s *Service) Register(ctx context.Context, userID uuid.UUID, token, name, password string) (auth.User, auth.Tokens, error) {
+	user, tokens, err := s.grpcClient.Register(ctx, userID.String(), token, name, password)
+	if err != nil {
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("register user: %w", err))
 	}
-	if err := s.grpcClient.Register(ctx, email, password, name); err != nil {
-		return logger.WrapError(ctx, fmt.Errorf("register user: %w", err))
-	}
-	return nil
+	return user, tokens, nil
 }
 
 func (s *Service) RepeatEmail(ctx context.Context, email string) error {
@@ -56,12 +54,15 @@ func (s *Service) RepeatEmail(ctx context.Context, email string) error {
 	return nil
 }
 
-func (s *Service) ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (auth.User, auth.Tokens, error) {
-	user, tokens, err := s.grpcClient.ConfirmEmail(ctx, token, userID.String())
-	if err != nil {
-		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("confirm email: %w", err))
+func (s *Service) ConfirmEmail(ctx context.Context, email string) error {
+	if err := s.redis.LimiterEmail(ctx, email); err != nil {
+		return logger.WrapError(ctx, fmt.Errorf("rate limit email: %w", err))
 	}
-	return user, tokens, nil
+	err := s.grpcClient.ConfirmEmail(ctx, email)
+	if err != nil {
+		return logger.WrapError(ctx, fmt.Errorf("confirm email: %w", err))
+	}
+	return nil
 }
 
 func (s *Service) Login(ctx context.Context, email string, password string) (auth.User, auth.Tokens, error) {
