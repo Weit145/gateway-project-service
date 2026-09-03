@@ -2,7 +2,6 @@ package handler_auth
 
 import (
 	"context"
-	"encoding/json"
 	"log/slog"
 	"net/http"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/Weit145/gateway-startup/internal/logger"
 	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
 	router_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
+	"github.com/Weit145/gateway-startup/internal/transport/api/v1/request"
 )
 
 type RefreshService interface {
@@ -48,20 +48,19 @@ func RefreshToken(ser RefreshService) http.HandlerFunc {
 			return
 		}
 
-		resp := dto.NewRegisterResponse(user, tokens)
-		w.Header().Set("Content-Type", "application/json")
+		resp := dto.NewRegisterResponse(user, tokens.AccessToken())
+
 		http.SetCookie(
 			w,
 			&http.Cookie{
 				Name:     "refresh_token",
-				Value:    tokens.RefreshToken(),
+				Value:    tokens.RefreshToken().Token(),
 				HttpOnly: true,
 				Secure:   true,
 				SameSite: http.SameSiteStrictMode,
 			},
 		)
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(resp)
+		request.WriteJSON(w, http.StatusOK, resp)
 
 		slog.DebugContext(ctx, "successful token refresh")
 	}

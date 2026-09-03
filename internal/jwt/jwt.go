@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"context"
 	"crypto/rsa"
 	"fmt"
 	"strings"
@@ -25,7 +26,7 @@ func NewJWTService(publicKey *rsa.PublicKey) *JWTService {
 	}
 }
 
-func (j *JWTService) CheckToken(authHeader string) (uuid.UUID, uuid.UUID, error) {
+func (j *JWTService) CheckToken(ctx context.Context, authHeader string) (uuid.UUID, uuid.UUID, error) {
 	if j.publicKey == nil {
 		return uuid.Nil, uuid.Nil, fmt.Errorf("JWT public key is not configured: %w", errs.ErrInternal)
 	}
@@ -60,7 +61,7 @@ func (j *JWTService) CheckToken(authHeader string) (uuid.UUID, uuid.UUID, error)
 		return uuid.Nil, uuid.Nil, fmt.Errorf("invalid token type %q: %w", claims.Type, errs.ErrUnauthorized)
 	}
 
-	userID, err := uuid.Parse(claims.Subject)
+	sub, err := uuid.Parse(claims.Subject)
 	if err != nil {
 		return uuid.Nil, uuid.Nil, fmt.Errorf("invalid token subject: %v: %w", err, errs.ErrUnauthorized)
 	}
@@ -70,5 +71,5 @@ func (j *JWTService) CheckToken(authHeader string) (uuid.UUID, uuid.UUID, error)
 		return uuid.Nil, uuid.Nil, fmt.Errorf("invalid token ID: %v: %w", err, errs.ErrUnauthorized)
 	}
 
-	return userID, jwtId, nil
+	return sub, jwtId, nil
 }

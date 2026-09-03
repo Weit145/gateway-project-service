@@ -2,7 +2,6 @@ package handler_auth
 
 import (
 	"context"
-	"encoding/json"
 	"log/slog"
 	"net/http"
 
@@ -27,10 +26,10 @@ type PasswordService interface {
 // @Accept json
 // @Produce json
 // @Param request body dto.PasswordRequest true "Password reset request"
-// @Success 200 {object} dto.Response
-// @Failure 400 {object} dto.Response
-// @Failure 429 {object} dto.Response
-// @Failure 500 {object} dto.Response
+// @Success 200 {object} router_err.Response
+// @Failure 400 {object} router_err.Response
+// @Failure 429 {object} router_err.Response
+// @Failure 500 {object} router_err.Response
 // @Router /auth/password-reset/request [post]
 func PasswordRequest(ser PasswordService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -59,10 +58,7 @@ func PasswordRequest(ser PasswordService) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(dto.Response{Status: "ok"})
-
+		request.WriteJSON(w, http.StatusOK, router_err.Response{Status: "ok"})
 		slog.DebugContext(ctx, "successful password request")
 	}
 }
@@ -74,12 +70,12 @@ func PasswordRequest(ser PasswordService) http.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param request body dto.PasswordConfirmRequest true "Password reset confirmation"
-// @Success 200 {object} dto.Response
-// @Failure 400 {object} dto.Response
-// @Failure 401 {object} dto.Response
-// @Failure 403 {object} dto.Response
-// @Failure 404 {object} dto.Response
-// @Failure 500 {object} dto.Response
+// @Success 200 {object} router_err.Response
+// @Failure 400 {object} router_err.Response
+// @Failure 401 {object} router_err.Response
+// @Failure 403 {object} router_err.Response
+// @Failure 404 {object} router_err.Response
+// @Failure 500 {object} router_err.Response
 // @Router /auth/password-reset/confirm [post]
 func PasswordConfirm(ser PasswordService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -108,10 +104,7 @@ func PasswordConfirm(ser PasswordService) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(dto.Response{Status: "ok"})
-
+		request.WriteJSON(w, http.StatusOK, router_err.Response{Status: "ok"})
 		slog.DebugContext(ctx, "successful password request")
 	}
 }
@@ -124,12 +117,12 @@ func PasswordConfirm(ser PasswordService) http.HandlerFunc {
 // @Produce json
 // @Security BearerAuth
 // @Param request body dto.ChangePasswordRequest true "Change password request"
-// @Success 200 {object} dto.Response
-// @Failure 400 {object} dto.Response
-// @Failure 401 {object} dto.Response
-// @Failure 403 {object} dto.Response
-// @Failure 429 {object} dto.Response
-// @Failure 500 {object} dto.Response
+// @Success 200 {object} router_err.Response
+// @Failure 400 {object} router_err.Response
+// @Failure 401 {object} router_err.Response
+// @Failure 403 {object} router_err.Response
+// @Failure 429 {object} router_err.Response
+// @Failure 500 {object} router_err.Response
 // @Router /auth/change-password [post]
 func ChangePassword(ser PasswordService) middleware.AuthHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, userID uuid.UUID) {
@@ -158,10 +151,7 @@ func ChangePassword(ser PasswordService) middleware.AuthHandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(dto.Response{Status: "ok"})
-
+		request.WriteJSON(w, http.StatusOK, router_err.Response{Status: "ok"})
 		slog.DebugContext(ctx, "successful password request")
 	}
 }

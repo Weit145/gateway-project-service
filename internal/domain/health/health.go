@@ -29,22 +29,9 @@ func NewHealth(ctx context.Context, name string, status string, db *string) (Hea
 	}, nil
 }
 
-func NewHealthList() []Health {
-	return []Health{}
-}
+func NewHealthList() []Health                               { return []Health{} }
+func AddHealth(healths []Health, health ...Health) []Health { return append(healths, health...) }
 
-func AddHealth(healths []Health, health ...Health) []Health {
-	return append(healths, health...)
-}
-
-func (h Health) Name() string {
-	return h.name
-}
-
-func (h Health) Status() string {
-	return h.status
-}
-
-func (h Health) DB() *string {
-	return h.db
-}
+func (h Health) Name() string   { return h.name }
+func (h Health) Status() string { return h.status }
+func (h Health) DB() *string    { return h.db }

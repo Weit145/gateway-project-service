@@ -54,7 +54,15 @@ func (c *Client) RefreshToken(ctx context.Context, refreshToken string) (auth.Us
 		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain user: %w", err))
 	}
 
-	tokens, err := auth.NewTokens(accessToken, responseRefreshToken)
+	accessTokenDomain, err := auth.NewToken(accessToken)
+	if err != nil {
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain tokens: %w", err))
+	}
+	refreshTokenDomain, err := auth.NewToken(refreshToken)
+	if err != nil {
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain tokens: %w", err))
+	}
+	tokens, err := auth.NewTokens(accessTokenDomain, refreshTokenDomain)
 	if err != nil {
 		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain tokens: %w", err))
 	}

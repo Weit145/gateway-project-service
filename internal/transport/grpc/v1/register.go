@@ -12,14 +12,12 @@ import (
 	GRPCauth "github.com/weit145/proto-startup/auth"
 )
 
-func (c *Client) Register(ctx context.Context, email string, password string, name string) error {
+func (c *Client) Register(ctx context.Context, email string) error {
 	rpcCtx, cancel := c.rpcLongContext(ctx)
 	defer cancel()
 
 	_, err := c.api.Register(rpcCtx, &GRPCauth.RegisterRequest{
-		Email:    email,
-		Password: password,
-		Name:     name,
+		Email: email,
 	})
 	if err != nil {
 		err = mapper_err_grpc.MapErr(err)
@@ -28,24 +26,43 @@ func (c *Client) Register(ctx context.Context, email string, password string, na
 	return nil
 }
 
-func (c *Client) RepeatEmail(ctx context.Context, email string) error {
-	rpcCtx, cancel := c.rpcDefaultContext(ctx)
-	defer cancel()
-
-	if _, err := c.api.RepeatEmail(rpcCtx, &GRPCauth.Email{Email: email}); err != nil {
-		err = mapper_err_grpc.MapErr(err)
-		return logger.WrapError(ctx, fmt.Errorf("From gRPC: %w", err))
-	}
-	return nil
-}
-
-func (c *Client) ConfirmEmail(ctx context.Context, token string, userID string) (auth.User, auth.Tokens, error) {
+func (c *Client) ConfirmEmail(ctx context.Context, token string, userID string) (auth.Token, error) {
 	rpcCtx, cancel := c.rpcDefaultContext(ctx)
 	defer cancel()
 
 	resp, err := c.api.ConfirmEmail(rpcCtx, &GRPCauth.ConfirmRequest{
 		Token:  token,
 		UserID: userID,
+	})
+	if err != nil {
+		err = mapper_err_grpc.MapErr(err)
+		return auth.Token{}, logger.WrapError(ctx, fmt.Errorf("From gRPC: %w", err))
+	}
+
+	accessToken := resp.GetAccessToken()
+
+	err = mapper_err_grpc.InvalidErr(ctx,
+		mapper_err_grpc.Field{Name: "accessToken", Value: accessToken},
+	)
+	if err != nil {
+		return auth.Token{}, logger.WrapError(ctx, fmt.Errorf("Invalid value from gRPC response: %w", err))
+	}
+
+	tokenDomain, err := auth.NewToken(accessToken)
+	if err != nil {
+		return auth.Token{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain tokens: %w", err))
+	}
+
+	return tokenDomain, nil
+}
+
+func (c *Client) RegisterComplete(ctx context.Context, password string, session uuid.UUID) (auth.User, auth.Tokens, error) {
+	rpcCtx, cancel := c.rpcDefaultContext(ctx)
+	defer cancel()
+
+	resp, err := c.api.RegisterComplete(rpcCtx, &GRPCauth.RegisterCompleteRequest{
+		Password: password,
+		Session:  session.String(),
 	})
 	if err != nil {
 		err = mapper_err_grpc.MapErr(err)
@@ -80,10 +97,30 @@ func (c *Client) ConfirmEmail(ctx context.Context, token string, userID string) 
 	if err != nil {
 		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain user: %w", err))
 	}
-	tokens, err := auth.NewTokens(accessToken, refreshToken)
+
+	accessTokenDomain, err := auth.NewToken(accessToken)
+	if err != nil {
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain tokens: %w", err))
+	}
+	refreshTokenDomain, err := auth.NewToken(refreshToken)
+	if err != nil {
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain tokens: %w", err))
+	}
+	tokens, err := auth.NewTokens(accessTokenDomain, refreshTokenDomain)
 	if err != nil {
 		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain tokens: %w", err))
 	}
 
 	return user, tokens, nil
+}
+
+func (c *Client) RepeatEmail(ctx context.Context, email string) error {
+	rpcCtx, cancel := c.rpcDefaultContext(ctx)
+	defer cancel()
+
+	if _, err := c.api.RepeatEmail(rpcCtx, &GRPCauth.Email{Email: email}); err != nil {
+		err = mapper_err_grpc.MapErr(err)
+		return logger.WrapError(ctx, fmt.Errorf("From gRPC: %w", err))
+	}
+	return nil
 }

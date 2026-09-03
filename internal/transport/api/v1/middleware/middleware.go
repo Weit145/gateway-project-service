@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Weit145/gateway-startup/internal/logger"
-	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
+	router_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
 	"github.com/google/uuid"
 )
 
@@ -17,6 +17,7 @@ type RateLimiter interface {
 }
 
 type AuthHandlerFunc func(http.ResponseWriter, *http.Request, uuid.UUID)
+type SessionHandlerFunc func(http.ResponseWriter, *http.Request, uuid.UUID, uuid.UUID)
 
 func Recovery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +27,7 @@ func Recovery(next http.Handler) http.Handler {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusInternalServerError)
-				_ = json.NewEncoder(w).Encode(dto.Error("internal server error"))
+				_ = json.NewEncoder(w).Encode(router_err.Error("internal server error"))
 			}
 		}()
 

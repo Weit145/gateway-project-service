@@ -20,6 +20,7 @@ type Services interface {
 	handler_auth.RegisterService
 	middleware.LoginService
 	middleware.RateLimitService
+	middleware.ServiceMiddlewareRegistration
 }
 
 type Repository interface {
@@ -36,9 +37,16 @@ func NewRouter(ser Services, rd Repository, trustedProxies []netip.Prefix, jwtPu
 
 	auth := r.PathPrefix("/auth").Subrouter()
 	auth.Use(middleware.CheckIPRateLimit(ser, trustedProxies))
-	auth.HandleFunc("/register", handler_auth.Register(ser)).Methods(http.MethodPost)
-	auth.HandleFunc("/repeat-email", handler_auth.RepeatEmail(ser)).Methods(http.MethodPost)
-	auth.HandleFunc("/confirm-email", handler_auth.ConfirmEmail(ser)).Methods(http.MethodPost)
+	register := r.PathPrefix("/register").Subrouter()
+	register.HandleFunc("/request", handler_auth.RegisterEmailRequest(ser)).Methods(http.MethodPost)
+	register.HandleFunc("/confirm", handler_auth.RegisterEmailConfirm(ser)).Methods(http.MethodPost)
+	register.Handle(
+		"/complete",
+		middleware.CheckCompleteRegistration(ser)(
+			handler_auth.RegisterComplete(ser),
+		),
+	).Methods(http.MethodPost)
+	register.HandleFunc("/repeat-email", handler_auth.RepeatEmail(ser)).Methods(http.MethodPost)
 
 	auth.HandleFunc("/login", handler_auth.Login(ser)).Methods(http.MethodPost)
 	auth.Handle(

@@ -1,9 +1,11 @@
 package port
 
 import (
+	"context"
+
 	"github.com/google/uuid"
 )
 
 type JWTServices interface {
-	CheckToken(authHeader string) (uuid.UUID, uuid.UUID, error)
+	CheckToken(ctx context.Context, authHeader string) (uuid.UUID, uuid.UUID, error)
 }

@@ -2,7 +2,6 @@ package handler_auth
 
 import (
 	"context"
-	"encoding/json"
 	"log/slog"
 	"net/http"
 
@@ -29,10 +28,10 @@ type LoginService interface {
 // @Param request body dto.LoginRequest true "Login request"
 // @Success 201 {object} dto.RegisterResponse
 // @Header 201 {string} Set-Cookie "refresh_token cookie"
-// @Failure 400 {object} dto.Response
-// @Failure 401 {object} dto.Response
-// @Failure 403 {object} dto.Response
-// @Failure 500 {object} dto.Response
+// @Failure 400 {object} router_err.Response
+// @Failure 401 {object} router_err.Response
+// @Failure 403 {object} router_err.Response
+// @Failure 500 {object} router_err.Response
 // @Router /auth/login [post]
 func Login(ser LoginService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -61,20 +60,19 @@ func Login(ser LoginService) http.HandlerFunc {
 			return
 		}
 
-		resp := dto.NewRegisterResponse(user, tokens)
-		w.Header().Set("Content-Type", "application/json")
+		resp := dto.NewRegisterResponse(user, tokens.AccessToken())
+
 		http.SetCookie(
 			w,
 			&http.Cookie{
 				Name:     "refresh_token",
-				Value:    tokens.RefreshToken(),
+				Value:    tokens.RefreshToken().Token(),
 				HttpOnly: true,
 				Secure:   true,
 				SameSite: http.SameSiteStrictMode,
 			},
 		)
-		w.WriteHeader(http.StatusCreated)
-		_ = json.NewEncoder(w).Encode(resp)
+		request.WriteJSON(w, http.StatusCreated, resp)
 
 		slog.InfoContext(ctx, "successful login")
 	}
@@ -86,11 +84,11 @@ func Login(ser LoginService) http.HandlerFunc {
 // @Tags auth
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} dto.Response
+// @Success 200 {object} router_err.Response
 // @Header 200 {string} Set-Cookie "Clears the refresh_token cookie"
-// @Failure 400 {object} dto.Response
-// @Failure 401 {object} dto.Response
-// @Failure 500 {object} dto.Response
+// @Failure 400 {object} router_err.Response
+// @Failure 401 {object} router_err.Response
+// @Failure 500 {object} router_err.Response
 // @Router /auth/logout [post]
 func Logout(ser LoginService) middleware.AuthHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, userID uuid.UUID) {
@@ -112,7 +110,6 @@ func Logout(ser LoginService) middleware.AuthHandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		http.SetCookie(
 			w,
 			&http.Cookie{
@@ -124,8 +121,7 @@ func Logout(ser LoginService) middleware.AuthHandlerFunc {
 				MaxAge:   -1,
 			},
 		)
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(dto.Response{Status: "ok"})
+		request.WriteJSON(w, http.StatusOK, router_err.Response{Status: "ok"})
 
 		slog.DebugContext(ctx, "successful Logout")
 	}

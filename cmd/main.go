@@ -41,7 +41,7 @@ func run() error {
 	//Init config
 	cfg, err := config.InitConfig()
 	if err != nil {
-		return fmt.Errorf("init config: %w", err)
+		return fmt.Errorf("Init config: %w", err)
 	}
 
 	//Init logger

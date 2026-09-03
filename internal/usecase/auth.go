@@ -36,14 +36,30 @@ func (s *Service) CheckHealthAuth(ctx context.Context) (*health.Health, error) {
 	return &authHealth, healthErr
 }
 
-func (s *Service) Register(ctx context.Context, email string, password string, name string) error {
+func (s *Service) Register(ctx context.Context, email string) error {
 	if err := s.redis.LimiterEmail(ctx, email); err != nil {
 		return logger.WrapError(ctx, fmt.Errorf("rate limit email: %w", err))
 	}
-	if err := s.grpcClient.Register(ctx, email, password, name); err != nil {
+	if err := s.grpcClient.Register(ctx, email); err != nil {
 		return logger.WrapError(ctx, fmt.Errorf("register user: %w", err))
 	}
 	return nil
+}
+
+func (s *Service) ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (auth.Token, error) {
+	tokenResult, err := s.grpcClient.ConfirmEmail(ctx, token, userID.String())
+	if err != nil {
+		return auth.Token{}, logger.WrapError(ctx, fmt.Errorf("confirm email: %w", err))
+	}
+	return tokenResult, nil
+}
+
+func (s *Service) RegisterComplete(ctx context.Context, password string, session uuid.UUID) (auth.User, auth.Tokens, error) {
+	user, tokens, err := s.grpcClient.RegisterComplete(ctx, password, session)
+	if err != nil {
+		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("register complete: %w", err))
+	}
+	return user, tokens, nil
 }
 
 func (s *Service) RepeatEmail(ctx context.Context, email string) error {
@@ -54,14 +70,6 @@ func (s *Service) RepeatEmail(ctx context.Context, email string) error {
 		return logger.WrapError(ctx, fmt.Errorf("reepat email register: %w", err))
 	}
 	return nil
-}
-
-func (s *Service) ConfirmEmail(ctx context.Context, token string, userID uuid.UUID) (auth.User, auth.Tokens, error) {
-	user, tokens, err := s.grpcClient.ConfirmEmail(ctx, token, userID.String())
-	if err != nil {
-		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("confirm email: %w", err))
-	}
-	return user, tokens, nil
 }
 
 func (s *Service) Login(ctx context.Context, email string, password string) (auth.User, auth.Tokens, error) {

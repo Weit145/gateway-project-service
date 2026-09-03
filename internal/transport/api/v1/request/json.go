@@ -28,3 +28,9 @@ func DecodeJSON(w http.ResponseWriter, r *http.Request, dst any) error {
 
 	return nil
 }
+
+func WriteJSON(w http.ResponseWriter, status int, body any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(body)
+}

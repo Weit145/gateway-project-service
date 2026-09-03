@@ -47,18 +47,7 @@ func NewUser(id uuid.UUID, email string, username string, role string) (User, er
 	}, nil
 }
 
-func (u User) ID() uuid.UUID {
-	return u.id
-}
-
-func (u User) Email() string {
-	return u.email
-}
-
-func (u User) Username() string {
-	return u.username
-}
-
-func (u User) Role() string {
-	return u.role
-}
+func (u User) ID() uuid.UUID    { return u.id }
+func (u User) Email() string    { return u.email }
+func (u User) Username() string { return u.username }
+func (u User) Role() string     { return u.role }

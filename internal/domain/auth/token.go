@@ -6,32 +6,32 @@ import (
 	"github.com/Weit145/gateway-startup/internal/lib/valid"
 )
 
-type Tokens struct {
-	accessToken  string
-	refreshToken string
+type Token struct {
+	token string
 }
 
-func NewTokens(accessToken string, refreshToken string) (Tokens, error) {
-	accessToken, err := valid.ValidateOpaqueValue(accessToken)
+func NewToken(token string) (Token, error) {
+	token, err := valid.ValidateOpaqueValue(token)
 	if err != nil {
-		return Tokens{}, fmt.Errorf("invalid access token: %w", err)
+		return Token{}, fmt.Errorf("invalid token: %w", err)
 	}
+	return Token{token: token}, nil
+}
 
-	refreshToken, err = valid.ValidateOpaqueValue(refreshToken)
-	if err != nil {
-		return Tokens{}, fmt.Errorf("invalid refresh token: %w", err)
-	}
+func (t Token) Token() string { return t.token }
 
+type Tokens struct {
+	accessToken  Token
+	refreshToken Token
+}
+
+// TODO: STRING OR TOKEN STRUCT
+func NewTokens(accessToken Token, refreshToken Token) (Tokens, error) {
 	return Tokens{
 		accessToken:  accessToken,
 		refreshToken: refreshToken,
 	}, nil
 }
 
-func (t Tokens) AccessToken() string {
-	return t.accessToken
-}
-
-func (t Tokens) RefreshToken() string {
-	return t.refreshToken
-}
+func (t Tokens) AccessToken() Token  { return t.accessToken }
+func (t Tokens) RefreshToken() Token { return t.refreshToken }
