@@ -110,7 +110,7 @@ func RegisterComplete(ser RegisterService) middleware.SessionHandlerFunc {
 		user, tokens, err := ser.RegisterComplete(ctx, req.Password, session)
 		if err != nil {
 			logCtx := logger.ErrorCtx(ctx, err)
-			slog.ErrorContext(logCtx, "failed to confirm email", slog.Any("error", err))
+			slog.ErrorContext(logCtx, "failed to complete registration", slog.Any("error", err))
 			router_err.MapErr(w, r, err)
 			return
 		}
@@ -121,6 +121,7 @@ func RegisterComplete(ser RegisterService) middleware.SessionHandlerFunc {
 			&http.Cookie{
 				Name:     "refresh_token",
 				Value:    tokens.RefreshToken().Token(),
+				Path:     "/",
 				HttpOnly: true,
 				Secure:   true,
 				SameSite: http.SameSiteStrictMode,
@@ -128,7 +129,7 @@ func RegisterComplete(ser RegisterService) middleware.SessionHandlerFunc {
 		)
 		request.WriteJSON(w, http.StatusCreated, resp)
 
-		slog.DebugContext(ctx, "successful email confirmation")
+		slog.DebugContext(ctx, "registration completed")
 	}
 }
 

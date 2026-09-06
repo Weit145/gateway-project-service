@@ -9,13 +9,12 @@ import (
 )
 
 type User struct {
-	id       uuid.UUID
-	email    string
-	username string
-	role     string
+	id    uuid.UUID
+	email string
+	role  string
 }
 
-func NewUser(id uuid.UUID, email string, username string, role string) (User, error) {
+func NewUser(id uuid.UUID, email string, role string) (User, error) {
 	if id == uuid.Nil {
 		return User{}, fmt.Errorf("id cannot be empty")
 	}
@@ -23,11 +22,6 @@ func NewUser(id uuid.UUID, email string, username string, role string) (User, er
 	email, err := valid.NormalizeEmail(email)
 	if err != nil {
 		return User{}, fmt.Errorf("invalid email: %w", err)
-	}
-
-	username, err = valid.NormalizeValue(username)
-	if err != nil {
-		return User{}, fmt.Errorf("invalid name: %w", err)
 	}
 
 	role, err = valid.NormalizeValue(role)
@@ -40,14 +34,12 @@ func NewUser(id uuid.UUID, email string, username string, role string) (User, er
 	}
 
 	return User{
-		id:       id,
-		email:    email,
-		username: username,
-		role:     role,
+		id:    id,
+		email: email,
+		role:  role,
 	}, nil
 }
 
-func (u User) ID() uuid.UUID    { return u.id }
-func (u User) Email() string    { return u.email }
-func (u User) Username() string { return u.username }
-func (u User) Role() string     { return u.role }
+func (u User) ID() uuid.UUID { return u.id }
+func (u User) Email() string { return u.email }
+func (u User) Role() string  { return u.role }

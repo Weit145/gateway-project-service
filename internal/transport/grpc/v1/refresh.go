@@ -30,14 +30,12 @@ func (c *Client) RefreshToken(ctx context.Context, refreshToken string) (auth.Us
 	idString := resp.GetUser().GetId()
 	email := resp.GetUser().GetEmail()
 	role := resp.GetUser().GetRole()
-	username := resp.GetUser().GetUsername()
 
 	err = mapper_err_grpc.InvalidErr(ctx,
 		mapper_err_grpc.Field{Name: "accessToken", Value: accessToken},
 		mapper_err_grpc.Field{Name: "refreshToken", Value: responseRefreshToken},
 		mapper_err_grpc.Field{Name: "id", Value: idString},
 		mapper_err_grpc.Field{Name: "email", Value: email},
-		mapper_err_grpc.Field{Name: "username", Value: username},
 		mapper_err_grpc.Field{Name: "role", Value: role},
 	)
 	if err != nil {
@@ -49,7 +47,7 @@ func (c *Client) RefreshToken(ctx context.Context, refreshToken string) (auth.Us
 		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Invalid user ID from gRPC response: %w", errs.ErrInternal))
 	}
 
-	user, err := auth.NewUser(id, email, username, role)
+	user, err := auth.NewUser(id, email, role)
 	if err != nil {
 		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain user: %w", err))
 	}
@@ -58,7 +56,7 @@ func (c *Client) RefreshToken(ctx context.Context, refreshToken string) (auth.Us
 	if err != nil {
 		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain tokens: %w", err))
 	}
-	refreshTokenDomain, err := auth.NewToken(refreshToken)
+	refreshTokenDomain, err := auth.NewToken(responseRefreshToken)
 	if err != nil {
 		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain tokens: %w", err))
 	}

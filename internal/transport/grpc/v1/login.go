@@ -31,14 +31,12 @@ func (c *Client) Login(ctx context.Context, email string, password string) (auth
 	idString := resp.GetUser().GetId()
 	email = resp.GetUser().GetEmail()
 	role := resp.GetUser().GetRole()
-	username := resp.GetUser().GetUsername()
 
 	err = mapper_err_grpc.InvalidErr(ctx,
 		mapper_err_grpc.Field{Name: "accessToken", Value: accessToken},
 		mapper_err_grpc.Field{Name: "refreshToken", Value: refreshToken},
 		mapper_err_grpc.Field{Name: "id", Value: idString},
 		mapper_err_grpc.Field{Name: "email", Value: email},
-		mapper_err_grpc.Field{Name: "username", Value: username},
 		mapper_err_grpc.Field{Name: "role", Value: role},
 	)
 	if err != nil {
@@ -50,7 +48,7 @@ func (c *Client) Login(ctx context.Context, email string, password string) (auth
 		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Invalid user ID from gRPC response: %w", errs.ErrInternal))
 	}
 
-	user, err := auth.NewUser(id, email, username, role)
+	user, err := auth.NewUser(id, email, role)
 	if err != nil {
 		return auth.User{}, auth.Tokens{}, logger.WrapError(ctx, fmt.Errorf("Faild create domain user: %w", err))
 	}

@@ -67,6 +67,7 @@ func Login(ser LoginService) http.HandlerFunc {
 			&http.Cookie{
 				Name:     "refresh_token",
 				Value:    tokens.RefreshToken().Token(),
+				Path:     "/",
 				HttpOnly: true,
 				Secure:   true,
 				SameSite: http.SameSiteStrictMode,
@@ -115,6 +116,7 @@ func Logout(ser LoginService) middleware.AuthHandlerFunc {
 			&http.Cookie{
 				Name:     "refresh_token",
 				Value:    "",
+				Path:     "/",
 				HttpOnly: true,
 				Secure:   true,
 				SameSite: http.SameSiteStrictMode,

@@ -55,6 +55,7 @@ func RefreshToken(ser RefreshService) http.HandlerFunc {
 			&http.Cookie{
 				Name:     "refresh_token",
 				Value:    tokens.RefreshToken().Token(),
+				Path:     "/",
 				HttpOnly: true,
 				Secure:   true,
 				SameSite: http.SameSiteStrictMode,

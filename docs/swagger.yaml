@@ -126,8 +126,6 @@ definitions:
         type: string
       id:
         type: string
-      name:
-        type: string
       role:
         type: string
     type: object
