@@ -24,6 +24,11 @@ definitions:
     - token
     - userId
     type: object
+  dto.ConfirmEmailResponse:
+    properties:
+      access_token:
+        type: string
+    type: object
   dto.Health:
     properties:
       db:
@@ -78,31 +83,30 @@ definitions:
     required:
     - email
     type: object
+  dto.RegisterCompleteRequest:
+    properties:
+      password:
+        maxLength: 32
+        minLength: 6
+        type: string
+    required:
+    - password
+    type: object
+  dto.RegisterCompleteResponse:
+    properties:
+      access_token:
+        type: string
+      user:
+        $ref: '#/definitions/dto.User'
+    type: object
   dto.RegisterRequest:
     properties:
       email:
         maxLength: 32
         minLength: 4
         type: string
-      name:
-        maxLength: 32
-        minLength: 4
-        type: string
-      password:
-        maxLength: 32
-        minLength: 6
-        type: string
     required:
     - email
-    - name
-    - password
-    type: object
-  dto.RegisterResponse:
-    properties:
-      access_token:
-        type: string
-      user:
-        $ref: '#/definitions/dto.User'
     type: object
   dto.RepeatEmailRequest:
     properties:
@@ -113,13 +117,6 @@ definitions:
     required:
     - email
     type: object
-  dto.Response:
-    properties:
-      error:
-        type: string
-      status:
-        type: string
-    type: object
   dto.User:
     properties:
       email:
@@ -127,6 +124,13 @@ definitions:
       id:
         type: string
       role:
+        type: string
+    type: object
+  router_err.Response:
+    properties:
+      error:
+        type: string
+      status:
         type: string
     type: object
 host: localhost:8080
@@ -172,77 +176,30 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "429":
           description: Too Many Requests
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
       security:
       - BearerAuth: []
       summary: Change password
-      tags:
-      - auth
-  /auth/confirm-email:
-    post:
-      consumes:
-      - application/json
-      description: Confirms a user email by verification token and returns an access
-        token. Refresh token is set in an HttpOnly cookie.
-      parameters:
-      - description: Confirm email request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.ConfirmEmailRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          headers:
-            Set-Cookie:
-              description: refresh_token cookie
-              type: string
-          schema:
-            $ref: '#/definitions/dto.RegisterResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dto.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dto.Response'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/dto.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/dto.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/dto.Response'
-      summary: Confirm user email
       tags:
       - auth
   /auth/login:
@@ -268,23 +225,23 @@ paths:
               description: refresh_token cookie
               type: string
           schema:
-            $ref: '#/definitions/dto.RegisterResponse'
+            $ref: '#/definitions/dto.RegisterCompleteResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
       summary: Login user
       tags:
       - auth
@@ -302,19 +259,19 @@ paths:
               description: Clears the refresh_token cookie
               type: string
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
       security:
       - BearerAuth: []
       summary: Logout user
@@ -338,27 +295,27 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
       summary: Confirm password reset
       tags:
       - auth
@@ -380,19 +337,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "429":
           description: Too Many Requests
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
       summary: Request password reset
       tags:
       - auth
@@ -412,68 +369,118 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.RegisterResponse'
+            $ref: '#/definitions/dto.RegisterCompleteResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
       summary: Refresh access token
       tags:
       - auth
-  /auth/register:
+  /register/complete:
     post:
       consumes:
       - application/json
-      description: Registers a new user and sends an email verification request.
+      description: Sets the password using the short-lived registration Bearer token
+        and creates an authenticated session.
       parameters:
-      - description: Register request
+      - description: Password
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.RegisterRequest'
+          $ref: '#/definitions/dto.RegisterCompleteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          headers:
+            Set-Cookie:
+              description: refresh_token cookie
+              type: string
+          schema:
+            $ref: '#/definitions/dto.RegisterCompleteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/router_err.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/router_err.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/router_err.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/router_err.Response'
+      security:
+      - BearerAuth: []
+      summary: Complete registration
+      tags:
+      - registration
+  /register/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Validates the email token and returns a short-lived registration
+        access token.
+      parameters:
+      - description: Email confirmation
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ConfirmEmailRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/dto.ConfirmEmailResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.Response'
-        "409":
-          description: Conflict
+            $ref: '#/definitions/router_err.Response'
+        "401":
+          description: Unauthorized
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/router_err.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.Response'
-      summary: Register user
+            $ref: '#/definitions/router_err.Response'
+      summary: Confirm registration email
       tags:
-      - auth
-  /auth/repeat-email:
+      - registration
+  /register/repeat-email:
     post:
       consumes:
       - application/json
-      description: Sends a new email verification token to an existing unverified
-        user.
+      description: Invalidates the previous verification token and sends a new verification
+        link.
       parameters:
-      - description: Repeat email verification request
+      - description: Registration email
         in: body
         name: request
         required: true
@@ -485,26 +492,64 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "429":
           description: Too Many Requests
           schema:
-            $ref: '#/definitions/dto.Response'
+            $ref: '#/definitions/router_err.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.Response'
-      summary: Repeat email verification
+            $ref: '#/definitions/router_err.Response'
+      summary: Repeat registration email
       tags:
-      - auth
+      - registration
+  /register/request:
+    post:
+      consumes:
+      - application/json
+      description: Creates a pending account and sends an email verification link.
+      parameters:
+      - description: Registration email
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/router_err.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/router_err.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/router_err.Response'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/router_err.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/router_err.Response'
+      summary: Request registration email
+      tags:
+      - registration
 securityDefinitions:
   BearerAuth:
     description: 'Enter: Bearer <access_token>'

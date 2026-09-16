@@ -22,11 +22,11 @@ type RefreshService interface {
 // @Tags auth
 // @Produce json
 // @Param Cookie header string true "refresh_token=<token>"
-// @Success 200 {object} dto.RegisterResponse
-// @Failure 400 {object} dto.Response
-// @Failure 401 {object} dto.Response
-// @Failure 404 {object} dto.Response
-// @Failure 500 {object} dto.Response
+// @Success 200 {object} dto.RegisterCompleteResponse
+// @Failure 400 {object} router_err.Response
+// @Failure 401 {object} router_err.Response
+// @Failure 404 {object} router_err.Response
+// @Failure 500 {object} router_err.Response
 // @Router /auth/refresh-token [post]
 func RefreshToken(ser RefreshService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

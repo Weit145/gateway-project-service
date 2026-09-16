@@ -12,4 +12,4 @@ down:
 
 
 swag:
-	swag init -g main.go -d cmd,internal/transport/api/v1/handler,internal/transport/api/v1/dto --parseInternal
+	swag init -g main.go -d cmd,internal/transport/api/v1/handler,internal/transport/api/v1/dto,internal/transport/api/v1/err --parseInternal

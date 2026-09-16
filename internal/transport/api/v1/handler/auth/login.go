@@ -26,7 +26,7 @@ type LoginService interface {
 // @Accept json
 // @Produce json
 // @Param request body dto.LoginRequest true "Login request"
-// @Success 201 {object} dto.RegisterResponse
+// @Success 201 {object} dto.RegisterCompleteResponse
 // @Header 201 {string} Set-Cookie "refresh_token cookie"
 // @Failure 400 {object} router_err.Response
 // @Failure 401 {object} router_err.Response
