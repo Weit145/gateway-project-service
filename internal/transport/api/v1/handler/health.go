@@ -50,7 +50,5 @@ func Health(ser HealthService) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)
 		_ = json.NewEncoder(w).Encode(response)
-
-		slog.DebugContext(ctx, "health checked", slog.Int("status", status))
 	}
 }

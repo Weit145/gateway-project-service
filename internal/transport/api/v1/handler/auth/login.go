@@ -74,8 +74,6 @@ func Login(ser LoginService) http.HandlerFunc {
 			},
 		)
 		request.WriteJSON(w, http.StatusCreated, resp)
-
-		slog.InfoContext(ctx, "successful login")
 	}
 }
 

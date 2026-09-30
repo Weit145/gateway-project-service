@@ -27,11 +27,11 @@ type keyType int
 const key = keyType(0)
 
 type logCtx struct {
-	Ip    string
-	JwtId uuid.UUID
-	Id    uuid.UUID
-	Name  string
-	Email string
+	RequestID uuid.UUID
+	JwtId     uuid.UUID
+	Id        uuid.UUID
+	Name      string
+	Email     string
 	// ListID uuid.UUID
 }
 
@@ -40,8 +40,8 @@ func (h *HandlerMiddlware) Handle(ctx context.Context, rec slog.Record) error {
 		// if c.ListID != uuid.Nil {
 		// 	rec.Add("listID", c.ListID)
 		// }
-		if c.Ip != "" {
-			rec.Add("ip", c.Ip)
+		if c.RequestID != uuid.Nil {
+			rec.Add("requestID", c.RequestID)
 		}
 		if c.JwtId != uuid.Nil {
 			rec.Add("jwtID", c.JwtId)
@@ -75,12 +75,12 @@ func (h *HandlerMiddlware) WithGroup(name string) slog.Handler {
 // 	return context.WithValue(ctx, key, logCtx{ListID: listID})
 // }
 
-func WithLogIp(ctx context.Context, ip string) context.Context {
+func WithLogRequestID(ctx context.Context, RequestID uuid.UUID) context.Context {
 	if c, ok := ctx.Value(key).(logCtx); ok {
-		c.Ip = ip
+		c.RequestID = RequestID
 		return context.WithValue(ctx, key, c)
 	}
-	return context.WithValue(ctx, key, logCtx{Ip: ip})
+	return context.WithValue(ctx, key, logCtx{RequestID: RequestID})
 }
 
 func WithLogId(ctx context.Context, id uuid.UUID) context.Context {

@@ -62,7 +62,5 @@ func RefreshToken(ser RefreshService) http.HandlerFunc {
 			},
 		)
 		request.WriteJSON(w, http.StatusOK, resp)
-
-		slog.DebugContext(ctx, "successful token refresh")
 	}
 }

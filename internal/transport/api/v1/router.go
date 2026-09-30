@@ -31,8 +31,7 @@ type Repository interface {
 func NewRouter(ser Services, rd Repository, trustedProxies []netip.Prefix, jwtPublicKey *rsa.PublicKey) *mux.Router {
 
 	r := mux.NewRouter()
-	r.Use(middleware.Recovery)
-	r.Use(middleware.Logging)
+	r.Use(middleware.Recovery, middleware.RequestID, middleware.Logging)
 	r.HandleFunc("/_health", handler.Health(ser)).Methods(http.MethodGet)
 
 	auth := r.PathPrefix("/auth").Subrouter()

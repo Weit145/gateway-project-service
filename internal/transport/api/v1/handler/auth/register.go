@@ -67,7 +67,6 @@ func RegisterEmailRequest(ser RegisterService) http.HandlerFunc {
 		}
 
 		request.WriteJSON(w, http.StatusOK, router_err.Response{Status: "ok"})
-		slog.DebugContext(ctx, "successful reques register")
 
 	}
 }
@@ -112,7 +111,6 @@ func RegisterEmailConfirm(ser RegisterService) http.HandlerFunc {
 			return
 		}
 		request.WriteJSON(w, http.StatusOK, dto.NewConfirmEmailResponse(token))
-		slog.DebugContext(ctx, "successful reques register")
 	}
 }
 
@@ -169,8 +167,6 @@ func RegisterComplete(ser RegisterService) middleware.SessionHandlerFunc {
 			},
 		)
 		request.WriteJSON(w, http.StatusCreated, resp)
-
-		slog.DebugContext(ctx, "registration completed")
 	}
 }
 
@@ -215,6 +211,5 @@ func RepeatEmail(ser RegisterService) http.HandlerFunc {
 		}
 
 		request.WriteJSON(w, http.StatusOK, router_err.Response{Status: "ok"})
-		slog.DebugContext(ctx, "successful repeat email")
 	}
 }

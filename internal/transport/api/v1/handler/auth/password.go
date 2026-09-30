@@ -59,7 +59,6 @@ func PasswordRequest(ser PasswordService) http.HandlerFunc {
 		}
 
 		request.WriteJSON(w, http.StatusOK, router_err.Response{Status: "ok"})
-		slog.DebugContext(ctx, "successful password request")
 	}
 }
 
@@ -105,7 +104,6 @@ func PasswordConfirm(ser PasswordService) http.HandlerFunc {
 		}
 
 		request.WriteJSON(w, http.StatusOK, router_err.Response{Status: "ok"})
-		slog.DebugContext(ctx, "successful password request")
 	}
 }
 
