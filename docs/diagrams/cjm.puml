@@ -1,0 +1,30 @@
+@startuml
+!pragma layout smetana
+title Gateway — CJM: HTTP-путь пользователя
+left to right direction
+skinparam shadowing false
+
+rectangle "1. Запросить письмо\nPOST /register/request\nemail → auth\nОтвет: ok" as request #E8F3FF
+rectangle "2. Получить письмо\nСсылка из email\nТокен и userId\nПовтор: /register/repeat-email" as letter #FFF2D7
+rectangle "3. Подтвердить email\nPOST /register/confirm\nОтвет: временный access_token" as confirm #FFF2D7
+rectangle "4. Задать пароль\nPOST /register/complete\nBearer: временный JWT\nОтвет: access_token + cookie" as complete #E3F5E8
+rectangle "5. Использовать доступ\n/auth/login, /auth/refresh-token\n/auth/logout\nCookie: refresh_token" as session #E3F5E8
+
+request --> letter
+letter --> confirm
+confirm --> complete
+complete --> session
+
+note bottom of request
+  Email ограничен Redis rate limiter.
+  Повторный запрос также ограничен.
+end note
+note bottom of complete
+  refresh_token хранится в HttpOnly,
+  Secure, SameSite=Strict cookie.
+end note
+note bottom of session
+  Забытый пароль: /auth/password-reset/request
+  и /auth/password-reset/confirm.
+end note
+@enduml

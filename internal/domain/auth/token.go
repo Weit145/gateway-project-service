@@ -3,7 +3,7 @@ package auth
 import (
 	"fmt"
 
-	"github.com/Weit145/gateway-startup/internal/lib/valid"
+	"github.com/Weit145/gateway-project-service/internal/lib/valid"
 )
 
 type Token struct {

@@ -1,0 +1,26 @@
+@startuml
+!pragma layout smetana
+title Gateway — Redis: схема ключей rate limiting
+left to right direction
+skinparam shadowing false
+
+rectangle "HTTP-запросы /auth/*" as auth
+rectangle "Запросы email:\n/register/request, /register/repeat-email,\n/auth/password-reset/request" as emailroutes
+rectangle "Защищённые операции:\n/auth/logout, /auth/change-password" as protected
+database "Redis" as redis {
+  rectangle "rate_limit:ip:<ip>\nredis_rate: 3 запроса/сек" as ip #D5F5D5
+  rectangle "rate_limit:email:<masked-email>\nredis_rate: 2 запроса/мин" as email #D5F5D5
+  rectangle "rate_limit:user:id:<uuid>\nredis_rate: 3 запроса/сек" as user #D5F5D5
+}
+
+auth --> ip : CheckIPRateLimit middleware
+emailroutes --> email : LimiterEmail use case
+protected --> user : CheckUserRateLimit middleware
+
+note bottom of redis
+  Gateway не создаёт таблиц PostgreSQL.
+  Состояние ключей и срок жизни управляются redis_rate.
+  Реализация маскирует email: первые 5 символов + '*'.
+  Схема PostgreSQL находится в auth-startup/docs/database.puml.
+end note
+@enduml

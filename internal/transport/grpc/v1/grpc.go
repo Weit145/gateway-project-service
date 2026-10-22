@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	errs "github.com/Weit145/gateway-startup/internal/lib/e"
-	"github.com/Weit145/gateway-startup/internal/logger"
-	mapper_err_grpc "github.com/Weit145/gateway-startup/internal/transport/grpc/v1/err"
+	errs "github.com/Weit145/gateway-project-service/internal/lib/e"
+	"github.com/Weit145/gateway-project-service/internal/logger"
+	mapper_err_grpc "github.com/Weit145/gateway-project-service/internal/transport/grpc/v1/err"
 
 	GRPCauth "github.com/weit145/proto-startup/auth"
 	"google.golang.org/grpc"

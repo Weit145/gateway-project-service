@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Weit145/gateway-startup/internal/domain/health"
-	errs "github.com/Weit145/gateway-startup/internal/lib/e"
-	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
+	"github.com/Weit145/gateway-project-service/internal/domain/health"
+	errs "github.com/Weit145/gateway-project-service/internal/lib/e"
+	"github.com/Weit145/gateway-project-service/internal/transport/api/v1/dto"
 )
 
 type healthServiceStub struct {

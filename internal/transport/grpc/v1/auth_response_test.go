@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Weit145/gateway-startup/internal/domain/auth"
+	"github.com/Weit145/gateway-project-service/internal/domain/auth"
 	"github.com/google/uuid"
 	pb "github.com/weit145/proto-startup/auth"
 	grpcapi "google.golang.org/grpc"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Weit145/gateway-startup/internal/logger"
+	"github.com/Weit145/gateway-project-service/internal/logger"
 	"github.com/google/uuid"
 )
 

@@ -3,8 +3,8 @@ package auth
 import (
 	"fmt"
 
-	errs "github.com/Weit145/gateway-startup/internal/lib/e"
-	"github.com/Weit145/gateway-startup/internal/lib/valid"
+	errs "github.com/Weit145/gateway-project-service/internal/lib/e"
+	"github.com/Weit145/gateway-project-service/internal/lib/valid"
 	"github.com/google/uuid"
 )
 

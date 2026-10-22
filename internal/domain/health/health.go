@@ -3,8 +3,8 @@ package health
 import (
 	"context"
 
-	errs "github.com/Weit145/gateway-startup/internal/lib/e"
-	"github.com/Weit145/gateway-startup/internal/logger"
+	errs "github.com/Weit145/gateway-project-service/internal/lib/e"
+	"github.com/Weit145/gateway-project-service/internal/logger"
 )
 
 type Health struct {

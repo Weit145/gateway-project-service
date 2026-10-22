@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	errs "github.com/Weit145/gateway-startup/internal/lib/e"
+	errs "github.com/Weit145/gateway-project-service/internal/lib/e"
 )
 
 func TestMapErrDependencyFailures(t *testing.T) {

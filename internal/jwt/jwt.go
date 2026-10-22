@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	errs "github.com/Weit145/gateway-startup/internal/lib/e"
+	errs "github.com/Weit145/gateway-project-service/internal/lib/e"
 	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )

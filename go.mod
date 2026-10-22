@@ -1,4 +1,4 @@
-module github.com/Weit145/gateway-startup
+module github.com/Weit145/gateway-project-service
 
 go 1.25.5
 

@@ -136,8 +136,8 @@ definitions:
 host: localhost:8080
 info:
   contact: {}
-  description: HTTP gateway for startup services.
-  title: Gateway Startup API
+  description: HTTP gateway for Auth project services.
+  title: Gateway Project Service API
   version: "1.0"
 paths:
   /_health:

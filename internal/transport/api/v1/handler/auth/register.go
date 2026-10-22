@@ -5,12 +5,12 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/Weit145/gateway-startup/internal/domain/auth"
-	"github.com/Weit145/gateway-startup/internal/logger"
-	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
-	router_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
-	"github.com/Weit145/gateway-startup/internal/transport/api/v1/middleware"
-	"github.com/Weit145/gateway-startup/internal/transport/api/v1/request"
+	"github.com/Weit145/gateway-project-service/internal/domain/auth"
+	"github.com/Weit145/gateway-project-service/internal/logger"
+	"github.com/Weit145/gateway-project-service/internal/transport/api/v1/dto"
+	router_err "github.com/Weit145/gateway-project-service/internal/transport/api/v1/err"
+	"github.com/Weit145/gateway-project-service/internal/transport/api/v1/middleware"
+	"github.com/Weit145/gateway-project-service/internal/transport/api/v1/request"
 	"github.com/google/uuid"
 )
 

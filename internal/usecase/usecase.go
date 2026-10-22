@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Weit145/gateway-startup/internal/domain/health"
-	errs "github.com/Weit145/gateway-startup/internal/lib/e"
-	"github.com/Weit145/gateway-startup/internal/logger"
-	"github.com/Weit145/gateway-startup/internal/usecase/port"
+	"github.com/Weit145/gateway-project-service/internal/domain/health"
+	errs "github.com/Weit145/gateway-project-service/internal/lib/e"
+	"github.com/Weit145/gateway-project-service/internal/logger"
+	"github.com/Weit145/gateway-project-service/internal/usecase/port"
 )
 
 type Service struct {

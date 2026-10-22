@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	router_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
+	router_err "github.com/Weit145/gateway-project-service/internal/transport/api/v1/err"
 	"github.com/google/uuid"
 )
 

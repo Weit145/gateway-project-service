@@ -11,19 +11,19 @@ import (
 	"syscall"
 	"time"
 
-	_ "github.com/Weit145/gateway-startup/docs"
-	"github.com/Weit145/gateway-startup/internal/config"
-	"github.com/Weit145/gateway-startup/internal/jwt"
-	"github.com/Weit145/gateway-startup/internal/logger"
-	my_redis "github.com/Weit145/gateway-startup/internal/repositories/storage/redis"
-	v1 "github.com/Weit145/gateway-startup/internal/transport/api/v1"
-	"github.com/Weit145/gateway-startup/internal/transport/grpc/v1"
-	"github.com/Weit145/gateway-startup/internal/usecase"
+	_ "github.com/Weit145/gateway-project-service/docs/api"
+	"github.com/Weit145/gateway-project-service/internal/config"
+	"github.com/Weit145/gateway-project-service/internal/jwt"
+	"github.com/Weit145/gateway-project-service/internal/logger"
+	my_redis "github.com/Weit145/gateway-project-service/internal/repositories/storage/redis"
+	v1 "github.com/Weit145/gateway-project-service/internal/transport/api/v1"
+	"github.com/Weit145/gateway-project-service/internal/transport/grpc/v1"
+	"github.com/Weit145/gateway-project-service/internal/usecase"
 )
 
-// @title Gateway Startup API
+// @title Gateway Project Service API
 // @version 1.0
-// @description HTTP gateway for startup services.
+// @description HTTP gateway for Auth project services.
 // @host localhost:8080
 // @BasePath /
 // @securityDefinitions.apikey BearerAuth

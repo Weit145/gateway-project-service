@@ -4,7 +4,7 @@ import (
 	"net/mail"
 	"strings"
 
-	errs "github.com/Weit145/gateway-startup/internal/lib/e"
+	errs "github.com/Weit145/gateway-project-service/internal/lib/e"
 )
 
 func NormalizeValue(value string) (string, error) {

@@ -6,7 +6,7 @@ import (
 	"net"
 	"testing"
 
-	errs "github.com/Weit145/gateway-startup/internal/lib/e"
+	errs "github.com/Weit145/gateway-project-service/internal/lib/e"
 	"github.com/go-redis/redis_rate/v10"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"

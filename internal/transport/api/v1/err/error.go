@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"net/http"
 
-	errs "github.com/Weit145/gateway-startup/internal/lib/e"
-	"github.com/Weit145/gateway-startup/internal/logger"
+	errs "github.com/Weit145/gateway-project-service/internal/lib/e"
+	"github.com/Weit145/gateway-project-service/internal/logger"
 	"github.com/go-playground/validator/v10"
 )
 

@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/Weit145/gateway-startup/internal/domain/health"
-	"github.com/Weit145/gateway-startup/internal/logger"
-	"github.com/Weit145/gateway-startup/internal/transport/api/v1/dto"
+	"github.com/Weit145/gateway-project-service/internal/domain/health"
+	"github.com/Weit145/gateway-project-service/internal/logger"
+	"github.com/Weit145/gateway-project-service/internal/transport/api/v1/dto"
 )
 
 type HealthService interface {

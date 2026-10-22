@@ -1,0 +1,34 @@
+@startuml
+!pragma layout smetana
+title Gateway — C4 Level 3: компоненты HTTP-шлюза
+left to right direction
+skinparam shadowing false
+
+rectangle "Frontend / API client\n<<External Container>>" as client #EEEEEE
+package "Gateway <<Container: Go>>" {
+  rectangle "HTTP router + handlers\n<<Component>>\n/register/*, /auth/*, /_health" as router #C7E7FF
+  rectangle "Middleware\n<<Component>>\nRequest ID, recovery, JWT, rate limit" as middleware #C7E7FF
+  rectangle "Use cases\n<<Component>>\nОркестрация auth операций" as usecase #C7E7FF
+  rectangle "JWT verifier\n<<Component>>\nПроверка подписи публичным ключом" as jwt #C7E7FF
+  rectangle "Redis rate limiter\n<<Component>>" as limiter #C7E7FF
+  rectangle "Auth gRPC client\n<<Component>>" as grpc #C7E7FF
+}
+rectangle "Auth gRPC\n<<External Container>>" as auth #EEEEEE
+database "Redis\n<<External Container>>" as redis #D5F5D5
+
+client --> router : HTTP/JSON
+router --> middleware : Защищённые маршруты
+router --> usecase : Передаёт запрос
+middleware --> usecase : Проверка ограничений
+usecase --> jwt : Проверяет Bearer JWT
+usecase --> limiter : Проверяет лимиты email
+middleware --> jwt : Проверяет Bearer JWT
+limiter --> redis : redis_rate
+usecase --> grpc : Вызывает auth
+grpc --> auth : gRPC / mTLS
+
+note bottom of router
+  /register/* — отдельная группа маршрутов.
+  /auth/* — маршруты входа и управления доступом.
+end note
+@enduml

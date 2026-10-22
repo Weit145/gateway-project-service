@@ -8,8 +8,8 @@ import (
 	"net/netip"
 	"strings"
 
-	errs "github.com/Weit145/gateway-startup/internal/lib/e"
-	router_err "github.com/Weit145/gateway-startup/internal/transport/api/v1/err"
+	errs "github.com/Weit145/gateway-project-service/internal/lib/e"
+	router_err "github.com/Weit145/gateway-project-service/internal/transport/api/v1/err"
 	"github.com/google/uuid"
 )
 

@@ -7,7 +7,7 @@ import (
 	"net/mail"
 	"strings"
 
-	errs "github.com/Weit145/gateway-startup/internal/lib/e"
+	errs "github.com/Weit145/gateway-project-service/internal/lib/e"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

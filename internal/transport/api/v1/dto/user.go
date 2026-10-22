@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"github.com/Weit145/gateway-startup/internal/domain/auth"
+	"github.com/Weit145/gateway-project-service/internal/domain/auth"
 	"github.com/google/uuid"
 )
 

@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"net/netip"
 
-	"github.com/Weit145/gateway-startup/internal/transport/api/v1/handler"
-	handler_auth "github.com/Weit145/gateway-startup/internal/transport/api/v1/handler/auth"
-	"github.com/Weit145/gateway-startup/internal/transport/api/v1/middleware"
+	"github.com/Weit145/gateway-project-service/internal/transport/api/v1/handler"
+	handler_auth "github.com/Weit145/gateway-project-service/internal/transport/api/v1/handler/auth"
+	"github.com/Weit145/gateway-project-service/internal/transport/api/v1/middleware"
 	"github.com/gorilla/mux"
 	httpSwagger "github.com/swaggo/http-swagger"
 )

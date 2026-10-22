@@ -1,6 +1,6 @@
 package dto
 
-import "github.com/Weit145/gateway-startup/internal/domain/health"
+import "github.com/Weit145/gateway-project-service/internal/domain/health"
 
 type Health struct {
 	Name   string `json:"name"`
